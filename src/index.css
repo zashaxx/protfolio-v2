@@ -25,7 +25,7 @@ html.dark,
   --border: rgba(168, 184, 213, 0.24);
   --portrait-border: #eef1f7;
   --shadow: 0 24px 70px rgba(2, 8, 23, 0.42);
-  --button-accent: #64ffda;
+  --button-accent: #ffffff;
 }
 
 * {

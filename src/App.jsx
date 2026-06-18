@@ -1,13 +1,14 @@
 import { flushSync } from 'react-dom'
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { Menu, MoonStar, SunMedium, X } from 'lucide-react'
+import { Menu, MoonStar, SunMedium, X, Folder, ExternalLink } from 'lucide-react'
 import { FaGithub, FaInstagram, FaLinkedinIn } from 'react-icons/fa6'
 import Preloader from './components/Preloader'
 import './App.css'
 
 const navItems = [
   { label: 'About', href: '#about' },
-  { label: 'Work', href: '#work' },
+  { label: 'Experience', href: '#experience' },
+  { label: 'Work', href: '#projects' },
   { label: 'Contact', href: '#contact' },
 ]
 
@@ -17,19 +18,43 @@ const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/flawedaayush', icon: FaInstagram },
 ]
 
-const featuredWork = [
+const experiences = [
   {
-    title: 'Brand systems that stay consistent',
-    text: 'Design and build polished interfaces with a focus on clarity, motion, and reliable component structure.',
+    company: 'Merch Nepal',
+    title: 'Full Stack Developer',
+    range: 'July 2024 - Present',
+    url: 'https://github.com/zashaxx/Merch-Nepal',
+    duties: [
+      'Developed a full-stack e-commerce platform using React, Node.js, Express, and MongoDB.',
+      'Implemented real-time live chat functionality using Socket.io to improve user engagement.',
+      'Integrated Stripe payment gateway for secure transaction processing and order fulfillment.',
+      'Built administrative controls and seller registration systems for seamless vendor management.'
+    ]
   },
   {
-    title: 'Fast frontends with clean interactions',
-    text: 'Create landing pages and portfolio sites that feel lightweight, responsive, and easy to extend.',
+    company: 'PU Project',
+    title: 'Lead Frontend Developer',
+    range: 'January 2024 - June 2024',
+    url: 'https://github.com/zashaxx/GoodNotesFinal',
+    duties: [
+      'Designed and built an educational portal website using React and Firebase.',
+      'Created a responsive, user-friendly UI for downloading study notes and educational materials.',
+      'Optimized content delivery and database queries to ensure fast load times and resource efficiency.',
+      'Collaborated with student representatives to understand user requirements and design intuitive workflows.'
+    ]
   },
   {
-    title: 'Dark mode done properly',
-    text: 'Offer a readable white default theme and a strong dark mode without losing contrast or hierarchy.',
-  },
+    company: 'Nep Tube',
+    title: 'React JS Developer',
+    range: 'September 2023 - December 2023',
+    url: '#',
+    duties: [
+      'Developed key user interface components for a local video streaming application.',
+      'Worked on video player integration, playback optimization, and media delivery features.',
+      'Styled user interaction components for standard desktop and mobile layouts.',
+      'Conducted unit testing on core utility functions to reduce runtime bugs by 15%.'
+    ]
+  }
 ]
 
 const projects = [
@@ -57,6 +82,51 @@ const projects = [
     stack: ['React', 'Video Delivery', 'UI Design', 'In Progress'],
     accent: 'N',
   },
+]
+
+const noteworthyProjects = [
+  {
+    title: 'GoodNotes Final Portal',
+    text: 'A university notes sharing platform built with React and Firebase for students to easily access past papers and learning materials.',
+    github: 'https://github.com/zashaxx/GoodNotesFinal',
+    external: 'https://github.com/zashaxx/GoodNotesFinal',
+    tech: ['React', 'Firebase', 'Tailwind']
+  },
+  {
+    title: 'Nep Tube UI Prototype',
+    text: 'A video streaming platform UI prototype optimized for local media servers, implementing dynamic routing and lazy loading.',
+    github: '#',
+    external: '#',
+    tech: ['React', 'Video.js', 'CSS Grid']
+  },
+  {
+    title: 'Realtime Chat Application',
+    text: 'A socket-based private chatting service built during learning MERN stack, with live typing status and read receipts.',
+    github: '#',
+    external: '#',
+    tech: ['Node.js', 'Socket.io', 'Express']
+  },
+  {
+    title: 'Expense Visualizer',
+    text: 'A clean single page app for tracking monthly expenses with visualized charts and JSON export capabilities.',
+    github: '#',
+    external: '#',
+    tech: ['JavaScript', 'Chart.js', 'CSS3']
+  },
+  {
+    title: 'Personal Portfolio v1',
+    text: 'The first iteration of my personal portfolio website, utilizing clean design principles and fluid typography.',
+    github: '#',
+    external: '#',
+    tech: ['HTML5', 'CSS3', 'JavaScript']
+  },
+  {
+    title: 'Syllabus Scraper API',
+    text: 'A node-based scraper that crawls Pokhara University curriculum sites to collect structured syllabus JSON data.',
+    github: '#',
+    external: '#',
+    tech: ['Node.js', 'Cheerio', 'Axios']
+  }
 ]
 
 const aboutSkills = [
@@ -94,6 +164,8 @@ function App() {
   const [isLoaderDone, setIsLoaderDone] = useState(false)
   const [activeSection, setActiveSection] = useState('about')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [activeTabId, setActiveTabId] = useState(0)
+  const [showAllNoteworthy, setShowAllNoteworthy] = useState(false)
 
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -201,7 +273,7 @@ function App() {
       {
         root: null,
         rootMargin: '0px 0px -10% 0px',
-        threshold: 0.18,
+        threshold: 0.1,
       },
     )
 
@@ -212,7 +284,21 @@ function App() {
       observer.disconnect()
       revealObserver.disconnect()
     }
-  }, [])
+  }, [isLoaderDone])
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.classList.add('blur-active')
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.classList.remove('blur-active')
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.classList.remove('blur-active')
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
 
   const toggleTheme = (event) => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark'
@@ -253,15 +339,35 @@ function App() {
     setIsMobileMenuOpen(false)
   }
 
+  // Smooth scroll handler for all links to support body scroll unlock
+  const handleNavClick = (e, href) => {
+    e.preventDefault()
+    setIsMobileMenuOpen(false)
+    const target = document.querySelector(href)
+    if (target) {
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 320)
+    }
+  }
+
+  const displayedNoteworthy = showAllNoteworthy ? noteworthyProjects : noteworthyProjects.slice(0, 4)
+
   return (
     <div className={`portfolio-page ${showFrame ? 'is-frame-visible' : ''}`}>
       <Preloader onHidden={() => setIsLoaderDone(true)} />
+
+      {/* Overlay for closing side drawer */}
+      <div 
+        className={`mobile-menu-overlay ${isMobileMenuOpen ? 'is-active' : ''}`}
+        onClick={closeMobileMenu}
+      />
 
       <div className="portfolio-shell">
         <header
           className={`portfolio-nav ${showNav ? 'is-visible' : ''} ${isAtTop ? 'is-top-page' : 'is-scrolled'} ${isMobileMenuOpen ? 'is-menu-open' : ''}`}
         >
-          <a className="brand-mark" href="#top" aria-label="Home">
+          <a className="brand-mark" href="#top" aria-label="Home" onClick={(e) => handleNavClick(e, '#top')}>
             <svg className="brand-mark__icon" viewBox="0 0 100 100" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
               <circle className="brand-mark__circle" cx="50" cy="50" r="36" stroke="currentColor" strokeWidth="12" />
               <g className="brand-mark__asterisk">
@@ -280,7 +386,7 @@ function App() {
                   href={item.href}
                   className={activeSection === item.href.slice(1) ? 'is-active' : ''}
                   style={{ '--nav-index': index }}
-                  onClick={closeMobileMenu}
+                  onClick={(e) => handleNavClick(e, item.href)}
                 >
                   <span>{String(index + 1).padStart(2, '0')}.</span>
                   {item.label}
@@ -318,7 +424,11 @@ function App() {
             </div>
           </div>
 
+          {/* Drawer Sidebar Menu */}
           <div className={`mobile-nav-panel ${isMobileMenuOpen ? 'is-open' : ''}`} id="primary-navigation">
+            <button className="mobile-menu-close" onClick={closeMobileMenu} aria-label="Close menu">
+              <X size={26} />
+            </button>
             <nav className="mobile-nav-links" aria-label="Mobile Primary">
               {navItems.map((item, index) => (
                 <a
@@ -326,7 +436,7 @@ function App() {
                   href={item.href}
                   className={activeSection === item.href.slice(1) ? 'is-active' : ''}
                   style={{ transitionDelay: `${index * 60}ms` }}
-                  onClick={closeMobileMenu}
+                  onClick={(e) => handleNavClick(e, item.href)}
                 >
                   <span>{String(index + 1).padStart(2, '0')}.</span>
                   {item.label}
@@ -365,10 +475,10 @@ function App() {
             </p>
 
             <div className="hero__actions">
-              <a className={`button button--primary hero__cta ${showCta ? 'is-visible' : ''}`} href="#work">
+              <a className={`button hero__cta ${showCta ? 'is-visible' : ''}`} href="#projects" onClick={(e) => handleNavClick(e, '#projects')}>
                 Explore Work
               </a>
-              <a className="button button--ghost" href="#contact">
+              <a className="button hero__contact-link" href="#contact" onClick={(e) => handleNavClick(e, '#contact')}>
                 Contact Me
               </a>
             </div>
@@ -428,19 +538,59 @@ function App() {
             </div>
           </section>
 
-          <section className="feature-section reveal-group" id="work">
-            <div className="section-heading">
-              <span>Selected Focus</span>
-              <h3>Built to feel intentional and lightweight.</h3>
+          <section className="experience-section reveal-group" id="experience">
+            <div className="section-heading section-heading--experience">
+              <span>02.</span>
+              <h3>Where I've Worked</h3>
+              <span className="section-heading__line" aria-hidden="true" />
             </div>
 
-            <div className="feature-grid">
-              {featuredWork.map((item) => (
-                <article className="feature-card" key={item.title}>
-                  <h4>{item.title}</h4>
-                  <p>{item.text}</p>
-                </article>
-              ))}
+            <div className="experience-layout">
+              <div className="tab-list" role="tablist" aria-label="Job tabs" style={{ '--active-index': activeTabId }}>
+                {experiences.map((exp, index) => (
+                  <button
+                    key={exp.company}
+                    className={`tab-button ${activeTabId === index ? 'is-active' : ''}`}
+                    onClick={() => setActiveTabId(index)}
+                    role="tab"
+                    aria-selected={activeTabId === index}
+                    aria-controls={`panel-${index}`}
+                    id={`tab-${index}`}
+                  >
+                    <span>{exp.company}</span>
+                  </button>
+                ))}
+                <div className="tab-highlight" />
+              </div>
+
+              <div className="tab-panels">
+                {experiences.map((exp, index) => (
+                  <div
+                    key={exp.company}
+                    className={`tab-panel ${activeTabId === index ? 'is-active' : ''}`}
+                    role="tabpanel"
+                    id={`panel-${index}`}
+                    aria-labelledby={`tab-${index}`}
+                    hidden={activeTabId !== index}
+                  >
+                    <h4>
+                      <span className="job-title">{exp.title}</span>
+                      <span className="job-company">
+                        &nbsp;@&nbsp;
+                        <a href={exp.url} target="_blank" rel="noreferrer" className="inline-link">
+                          {exp.company}
+                        </a>
+                      </span>
+                    </h4>
+                    <p className="job-range">{exp.range}</p>
+                    <ul className="job-duties">
+                      {exp.duties.map((duty, i) => (
+                        <li key={i}>{duty}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -503,13 +653,62 @@ function App() {
             </div>
           </section>
 
-          <section className="contact-section reveal-group" id="contact">
-            <div className="section-heading">
-              <span>Contact</span>
-              <h3>Let’s build your next portfolio or landing page.</h3>
+          {/* New Noteworthy Projects Section */}
+          <section className="noteworthy-section reveal-group" id="noteworthy">
+            <div className="section-heading noteworthy-heading">
+              <h3>Other Noteworthy Projects</h3>
             </div>
 
-            <a className="button button--primary button--contact" href="mailto:hello@example.com">
+            <div className="noteworthy-grid">
+              {displayedNoteworthy.map((proj) => (
+                <article className="noteworthy-card" key={proj.title}>
+                  <div className="card-top">
+                    <Folder className="folder-icon" size={36} />
+                    <div className="card-links">
+                      <a href={proj.github} target="_blank" rel="noreferrer" aria-label="GitHub">
+                        <FaGithub size={20} />
+                      </a>
+                      {proj.external && proj.external !== '#' && (
+                        <a href={proj.external} target="_blank" rel="noreferrer" aria-label="External Link">
+                          <ExternalLink size={20} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <h4 className="card-title">{proj.title}</h4>
+
+                  <p className="card-description">{proj.text}</p>
+
+                  <ul className="card-tech">
+                    {proj.tech.map((t) => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+
+            <button 
+              className="button noteworthy-toggle-btn"
+              onClick={() => setShowAllNoteworthy(!showAllNoteworthy)}
+            >
+              Show {showAllNoteworthy ? 'Less' : 'More'}
+            </button>
+          </section>
+
+          <section className="contact-section reveal-group" id="contact">
+            <div className="section-heading">
+              <span>04.</span>
+              <h3>Get In Touch</h3>
+              <span className="section-heading__line" aria-hidden="true" />
+            </div>
+
+            <p className="contact-copy" style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem' }}>
+              I am currently looking for new opportunities and my inbox is always open. Whether you have a question or just want to say hi, I’ll try my best to get back to you!
+            </p>
+
+            <a className="button" href="mailto:aayushkoirala8848@gmail.com" style={{ margin: '30px auto 0', display: 'inline-flex' }}>
               Say Hello
             </a>
           </section>
