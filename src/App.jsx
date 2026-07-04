@@ -1,379 +1,424 @@
-import { flushSync } from 'react-dom'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { Menu, MoonStar, SunMedium, X, Folder, ExternalLink } from 'lucide-react'
-import { FaGithub, FaInstagram, FaLinkedinIn } from 'react-icons/fa6'
-import Preloader from './components/Preloader'
-import './App.css'
+import { flushSync } from "react-dom";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { Download, MoonStar, SunMedium, X, Folder, ExternalLink } from "lucide-react";
+import { FaGithub, FaInstagram, FaLinkedinIn, FaWhatsapp } from "react-icons/fa6";
+import Preloader from "./components/Preloader";
+import "./App.css";
 
 const navItems = [
-  { label: 'About', href: '#about' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Work', href: '#projects' },
-  { label: 'Contact', href: '#contact' },
-]
+  { label: "About", href: "#about" },
+  { label: "Expertise", href: "#experience" },
+  { label: "Projects", href: "#projects" },
+  { label: "Contact", href: "#contact" },
+];
 
 const socialLinks = [
-  { label: 'GitHub', href: 'https://github.com/zashaxx', icon: FaGithub },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/aayushkoirala8848/', icon: FaLinkedinIn },
-  { label: 'Instagram', href: 'https://www.instagram.com/flawedaayush', icon: FaInstagram },
-]
+  { label: "GitHub", href: "https://github.com/zashaxx", icon: FaGithub },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/aayushkoirala8848/",
+    icon: FaLinkedinIn,
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/flawedaayush",
+    icon: FaInstagram,
+  },
+];
 
 const experiences = [
   {
-    company: 'Merch Nepal',
-    title: 'Full Stack Developer',
-    range: 'July 2024 - Present',
-    url: 'https://github.com/zashaxx/Merch-Nepal',
+    company: "Full Stack Development",
+    title: "MERN Stack & Modern Web",
+    range: "Active Focus",
+    url: "https://github.com/zashaxx",
     duties: [
-      'Developed a full-stack e-commerce platform using React, Node.js, Express, and MongoDB.',
-      'Implemented real-time live chat functionality using Socket.io to improve user engagement.',
-      'Integrated Stripe payment gateway for secure transaction processing and order fulfillment.',
-      'Built administrative controls and seller registration systems for seamless vendor management.'
-    ]
+      "Building end-to-end web applications using React, Node.js, Express, and MongoDB.",
+      "Developing responsive, accessible interfaces with modern CSS and JavaScript.",
+      "Exploring Next.js for server-side rendering and improved performance.",
+      "Integrating third-party services, payment gateways, and real-time features.",
+    ],
   },
   {
-    company: 'PU Project',
-    title: 'Lead Frontend Developer',
-    range: 'January 2024 - June 2024',
-    url: 'https://github.com/zashaxx/GoodNotesFinal',
+    company: "Python & Web Security",
+    title: "Certified Practitioner",
+    range: "Certification Earned",
+    url: "https://github.com/zashaxx",
+    certUrl: "/python_certificate_cs.pdf",
     duties: [
-      'Designed and built an educational portal website using React and Firebase.',
-      'Created a responsive, user-friendly UI for downloading study notes and educational materials.',
-      'Optimized content delivery and database queries to ensure fast load times and resource efficiency.',
-      'Collaborated with student representatives to understand user requirements and design intuitive workflows.'
-    ]
+      "Earned a certification in Python for Web Security, covering secure coding practices and vulnerability mitigation.",
+      "Understanding common web vulnerabilities (XSS, CSRF, SQL Injection) and implementing proper defenses.",
+      "Applying security best practices across the full development lifecycle.",
+      "Exploring Python-based backend frameworks like FastAPI for API development.",
+    ],
   },
   {
-    company: 'Nep Tube',
-    title: 'React JS Developer',
-    range: 'September 2023 - December 2023',
-    url: '#',
+    company: "UI/UX & Frontend Craft",
+    title: "Design-Minded Developer",
+    range: "Ongoing",
+    url: "#",
     duties: [
-      'Developed key user interface components for a local video streaming application.',
-      'Worked on video player integration, playback optimization, and media delivery features.',
-      'Styled user interaction components for standard desktop and mobile layouts.',
-      'Conducted unit testing on core utility functions to reduce runtime bugs by 15%.'
-    ]
-  }
-]
+      "Crafting clean, intuitive user interfaces with attention to typography, spacing, and color theory.",
+      "Implementing responsive designs that work seamlessly across devices and screen sizes.",
+      "Focusing on performance optimization, accessibility (a11y), and smooth animations.",
+      "Translating design mockups and wireframes into functional, pixel-perfect components.",
+    ],
+  },
+];
 
 const projects = [
   {
-    title: 'MERCH Nepal',
-    subtitle: 'Merchandise Selling Website',
-    text: 'A full-stack e-commerce platform built using the MERN stack. Features include seller registration, customer interaction, administrative controls, payment integration, and real-time live chat functionality.',
-    href: 'https://github.com/zashaxx/Merch-Nepal',
-    stack: ['React', 'Node.js', 'Express', 'MongoDB', 'Socket.io', 'Stripe'],
-    accent: 'M',
+    title: "MERCH Nepal",
+    subtitle: "Merchandise Selling Website",
+    text: "A full-stack e-commerce platform built using the MERN stack. Features include seller registration, customer interaction, administrative controls, payment integration, and real-time live chat functionality.",
+    href: "https://github.com/zashaxx/Merch-Nepal",
+    stack: ["React", "Node.js", "Express", "MongoDB", "Socket.io", "Stripe"],
+    accent: "M",
   },
   {
-    title: 'GoodNotes',
-    subtitle: 'Notes Downloading Website',
+    title: "GoodNotes",
+    subtitle: "Notes Downloading Website",
     text: "A targeted resource educational portal website designed for Pokhara University students to easily access and download necessary notes and educational materials, improving study efficiency.",
-    href: 'https://github.com/zashaxx/GoodNotesFinal',
-    stack: ['React', 'Firebase', 'Responsive UI', 'Content Management'],
-    accent: 'G',
+    href: "https://github.com/zashaxx/GoodNotesFinal",
+    stack: ["React", "Firebase", "Responsive UI", "Content Management"],
+    accent: "G",
   },
   {
-    title: 'Nep Tube',
-    subtitle: 'Nepal Video Streaming Website',
-    text: "A Nepal-based video streaming application. This project is currently in the development phase, focusing on content delivery optimization and user interface design. (In Progress)",
-    href: '#',
-    stack: ['React', 'Video Delivery', 'UI Design', 'In Progress'],
-    accent: 'N',
+    title: "Nep Tube",
+    subtitle: "Nepal Video Streaming Platform",
+    text: "A full-stack video streaming platform built with Next.js and tRPC, featuring Clerk authentication, AI-powered tools via Replicate, PostgreSQL with Drizzle ORM, and a dedicated video streaming server.",
+    href: "https://github.com/zashaxx/neptube",
+    stack: ["Next.js", "TypeScript", "PostgreSQL", "tRPC", "Clerk Auth", "AI Integration"],
+    accent: "N",
   },
-]
+];
 
 const noteworthyProjects = [
   {
-    title: 'GoodNotes Final Portal',
-    text: 'A university notes sharing platform built with React and Firebase for students to easily access past papers and learning materials.',
-    github: 'https://github.com/zashaxx/GoodNotesFinal',
-    external: 'https://github.com/zashaxx/GoodNotesFinal',
-    tech: ['React', 'Firebase', 'Tailwind']
+    title: "Chromatiq",
+    text: "An interactive colour guessing game built with Next.js where players test their colour perception by matching the correct shade. Features a clean, minimalist UI with real-time feedback.",
+    github: "https://github.com/zashaxx/chromatiq",
+    external: "https://chromatiq.vercel.app/",
+    tech: ["Next.js", "React", "CSS3", "Vercel"],
   },
   {
-    title: 'Nep Tube UI Prototype',
-    text: 'A video streaming platform UI prototype optimized for local media servers, implementing dynamic routing and lazy loading.',
-    github: '#',
-    external: '#',
-    tech: ['React', 'Video.js', 'CSS Grid']
+    title: "Cow & Bull",
+    text: "A classic code-breaking number guessing game built as a web application. Players take turns guessing each other's secret number with real-time feedback on each guess.",
+    github: "https://github.com/zashaxx/cowbull",
+    external: "https://cowbull-flame.vercel.app/",
+    tech: ["React", "JavaScript", "CSS3", "Vercel"],
   },
   {
-    title: 'Realtime Chat Application',
-    text: 'A socket-based private chatting service built during learning MERN stack, with live typing status and read receipts.',
-    github: '#',
-    external: '#',
-    tech: ['Node.js', 'Socket.io', 'Express']
+    title: "Todo App (FastAPI + React)",
+    text: "A full-stack task management application featuring a FastAPI backend with SQLAlchemy and a React frontend. Demonstrates integration between Python-based APIs and modern JavaScript frameworks.",
+    github: "https://github.com/zashaxx/working_with_api/tree/master/fast-api",
+    external: "",
+    tech: ["FastAPI", "React", "Python", "SQLAlchemy", "REST API"],
   },
   {
-    title: 'Expense Visualizer',
-    text: 'A clean single page app for tracking monthly expenses with visualized charts and JSON export capabilities.',
-    github: '#',
-    external: '#',
-    tech: ['JavaScript', 'Chart.js', 'CSS3']
+    title: "Portfolio v2 (React + Vite)",
+    text: "A personal portfolio website built with React and Vite, featuring a clean design system, dark/light theme support, smooth scroll animations, and fully responsive layouts.",
+    github: "https://github.com/zashaxx/protfolio-v2",
+    external: "",
+    tech: ["React", "Vite", "CSS3", "JavaScript"],
   },
-  {
-    title: 'Personal Portfolio v1',
-    text: 'The first iteration of my personal portfolio website, utilizing clean design principles and fluid typography.',
-    github: '#',
-    external: '#',
-    tech: ['HTML5', 'CSS3', 'JavaScript']
-  },
-  {
-    title: 'Syllabus Scraper API',
-    text: 'A node-based scraper that crawls Pokhara University curriculum sites to collect structured syllabus JSON data.',
-    github: '#',
-    external: '#',
-    tech: ['Node.js', 'Cheerio', 'Axios']
-  }
-]
+];
 
 const aboutSkills = [
   {
-    title: 'Frontend Development (React Focus)',
-    items: ['HTML', 'CSS', 'JavaScript (ES6+)', 'React JS', 'SASS/SCSS'],
+    title: "Frontend Development",
+    items: [
+      "HTML",
+      "CSS",
+      "JavaScript (ES6+)",
+      "React JS",
+      "Next JS",
+      "SASS/SCSS",
+    ],
   },
   {
-    title: 'Backend & Database (MERN + SQL)',
-    items: ['Node JS', 'Express JS', 'MongoDB', 'SQL (Relational DBs)', 'Git / GitHub', 'REST APIs'],
+    title: "Backend, Security & Tools",
+    items: [
+      "Node JS",
+      "Express JS",
+      "Python",
+      "FastAPI",
+      "MongoDB",
+      "SQL",
+      "REST APIs",
+      "Git / GitHub",
+      "Web Security Fundamentals",
+    ],
   },
-]
+];
 
 function App() {
   const preferredTheme = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return 'light'
+    if (typeof window === "undefined") {
+      return "light";
     }
 
-    const savedTheme = window.localStorage.getItem('theme')
+    const savedTheme = window.localStorage.getItem("theme");
 
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      return savedTheme
+    if (savedTheme === "light" || savedTheme === "dark") {
+      return savedTheme;
     }
 
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }, [])
+    return "light";
+  }, []);
 
-  const [theme, setTheme] = useState(preferredTheme)
-  const [showNav, setShowNav] = useState(false)
-  const [isAtTop, setIsAtTop] = useState(true)
-  const [showHero, setShowHero] = useState(false)
-  const [showCta, setShowCta] = useState(false)
-  const [showFrame, setShowFrame] = useState(false)
-  const [isLoaderDone, setIsLoaderDone] = useState(false)
-  const [activeSection, setActiveSection] = useState('about')
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [activeTabId, setActiveTabId] = useState(0)
-  const [showAllNoteworthy, setShowAllNoteworthy] = useState(false)
+  const [theme, setTheme] = useState(preferredTheme);
+  const [showNav, setShowNav] = useState(false);
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [showHero, setShowHero] = useState(false);
+  const [showFrame, setShowFrame] = useState(false);
+  const [isLoaderDone, setIsLoaderDone] = useState(false);
+  const [activeSection, setActiveSection] = useState("about");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeTabId, setActiveTabId] = useState(0);
+  const [showAllNoteworthy, setShowAllNoteworthy] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   useLayoutEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    document.documentElement.setAttribute('data-theme', theme)
-    window.localStorage.setItem('theme', theme)
-  }, [theme])
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+    window.localStorage.setItem("theme", theme);
+  }, [theme]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined
+    if (typeof window === "undefined") {
+      return undefined;
     }
 
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual'
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
 
-    window.scrollTo(0, 0)
+    window.scrollTo(0, 0);
 
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto'
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
-    }
-  }, [])
+    };
+  }, []);
 
   useEffect(() => {
     if (!isLoaderDone) {
-      return undefined
+      return undefined;
     }
 
-    let lastScrollY = window.scrollY
-    let ticking = false
+    let lastScrollY = window.scrollY;
+    let ticking = false;
 
     const updateNavVisibility = () => {
-      const currentScrollY = window.scrollY
-      const atTop = currentScrollY <= 24
-      const scrollingUp = currentScrollY < lastScrollY
-      const scrollingDown = currentScrollY > lastScrollY
+      const currentScrollY = window.scrollY;
+      const atTop = currentScrollY <= 24;
+      const scrollingUp = currentScrollY < lastScrollY;
+      const scrollingDown = currentScrollY > lastScrollY;
 
-      setIsAtTop(atTop)
+      setIsAtTop(atTop);
 
       if (scrollingUp) {
-        setShowNav(true)
+        setShowNav(true);
       } else if (scrollingDown) {
-        setShowNav(false)
-        setIsMobileMenuOpen(false)
+        setShowNav(false);
+        setIsMobileMenuOpen(false);
       }
 
-      lastScrollY = currentScrollY
-      ticking = false
-    }
+      lastScrollY = currentScrollY;
+      ticking = false;
+    };
 
     const onScroll = () => {
       if (ticking) {
-        return
+        return;
       }
 
-      ticking = true
-      window.requestAnimationFrame(updateNavVisibility)
-    }
+      ticking = true;
+      window.requestAnimationFrame(updateNavVisibility);
+    };
 
-    const navTimer = window.setTimeout(() => setShowNav(true), 0)
-    const heroTimer = window.setTimeout(() => setShowHero(true), 1150)
-    const ctaTimer = window.setTimeout(() => setShowCta(true), 2350)
-    const frameTimer = window.setTimeout(() => setShowFrame(true), 2650)
-    window.addEventListener('scroll', onScroll, { passive: true })
+    const navTimer = window.setTimeout(() => setShowNav(true), 0);
+    const heroTimer = window.setTimeout(() => setShowHero(true), 1150);
+    const frameTimer = window.setTimeout(() => setShowFrame(true), 2650);
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
-      window.clearTimeout(navTimer)
-      window.clearTimeout(heroTimer)
-      window.clearTimeout(ctaTimer)
-      window.clearTimeout(frameTimer)
-      window.removeEventListener('scroll', onScroll)
-    }
-  }, [isLoaderDone])
+      window.clearTimeout(navTimer);
+      window.clearTimeout(heroTimer);
+      window.clearTimeout(frameTimer);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [isLoaderDone]);
 
   useEffect(() => {
-    const sections = Array.from(document.querySelectorAll('main section'))
+    const sections = Array.from(document.querySelectorAll("main section"));
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const visibleEntry = entries.find((entry) => entry.isIntersecting)
+        const visibleEntry = entries.find((entry) => entry.isIntersecting);
 
         if (visibleEntry?.target?.id) {
-          setActiveSection(visibleEntry.target.id)
+          setActiveSection(visibleEntry.target.id);
         }
       },
       {
-        rootMargin: '-45% 0px -45% 0px',
+        rootMargin: "-45% 0px -45% 0px",
         threshold: 0.2,
       },
-    )
+    );
 
-    sections.forEach((section) => observer.observe(section))
+    sections.forEach((section) => observer.observe(section));
 
     const revealObserver = new IntersectionObserver(
       (entries, obs) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('is-revealed')
-            obs.unobserve(entry.target)
+            entry.target.classList.add("is-revealed");
+            obs.unobserve(entry.target);
           }
-        })
+        });
       },
       {
         root: null,
-        rootMargin: '0px 0px -10% 0px',
+        rootMargin: "0px 0px -10% 0px",
         threshold: 0.1,
       },
-    )
+    );
 
-    const revealElements = document.querySelectorAll('.reveal-group')
-    revealElements.forEach((el) => revealObserver.observe(el))
+    const revealElements = document.querySelectorAll(".reveal-group");
+    revealElements.forEach((el) => revealObserver.observe(el));
 
     return () => {
-      observer.disconnect()
-      revealObserver.disconnect()
-    }
-  }, [isLoaderDone])
+      observer.disconnect();
+      revealObserver.disconnect();
+    };
+  }, [isLoaderDone]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.classList.add('blur-active')
-      document.body.style.overflow = 'hidden'
+      document.body.classList.add("blur-active");
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.classList.remove('blur-active')
-      document.body.style.overflow = ''
+      document.body.classList.remove("blur-active");
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.classList.remove('blur-active')
-      document.body.style.overflow = ''
-    }
-  }, [isMobileMenuOpen])
+      document.body.classList.remove("blur-active");
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
 
   const toggleTheme = (event) => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark'
-    const fallbackRect = event.currentTarget.getBoundingClientRect()
-    const originX = event.clientX || fallbackRect.left + fallbackRect.width / 2
-    const originY = event.clientY || fallbackRect.top + fallbackRect.height / 2
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    const fallbackRect = event.currentTarget.getBoundingClientRect();
+    const originX = event.clientX || fallbackRect.left + fallbackRect.width / 2;
+    const originY = event.clientY || fallbackRect.top + fallbackRect.height / 2;
 
-    document.documentElement.style.setProperty('--x', `${originX}px`)
-    document.documentElement.style.setProperty('--y', `${originY}px`)
-    document.documentElement.dataset.transitionTheme = nextTheme
+    document.documentElement.style.setProperty("--x", `${originX}px`);
+    document.documentElement.style.setProperty("--y", `${originY}px`);
+    document.documentElement.dataset.transitionTheme = nextTheme;
 
     const commitTheme = () => {
-      document.documentElement.classList.toggle('dark', nextTheme === 'dark')
-      document.documentElement.setAttribute('data-theme', nextTheme)
-      setTheme(nextTheme)
-    }
+      document.documentElement.classList.toggle("dark", nextTheme === "dark");
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      setTheme(nextTheme);
+    };
 
-    if (typeof document.startViewTransition === 'function') {
+    if (typeof document.startViewTransition === "function") {
       const transition = document.startViewTransition(() => {
-        flushSync(commitTheme)
-      })
+        flushSync(commitTheme);
+      });
 
       transition.finished.finally(() => {
-        delete document.documentElement.dataset.transitionTheme
-      })
-      return
+        delete document.documentElement.dataset.transitionTheme;
+      });
+      return;
     }
 
-    flushSync(commitTheme)
-    delete document.documentElement.dataset.transitionTheme
-  }
+    flushSync(commitTheme);
+    delete document.documentElement.dataset.transitionTheme;
+  };
 
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen((currentValue) => !currentValue)
-  }
+    setIsMobileMenuOpen((currentValue) => !currentValue);
+  };
 
   const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false)
-  }
+    setIsMobileMenuOpen(false);
+  };
 
   // Smooth scroll handler for all links to support body scroll unlock
   const handleNavClick = (e, href) => {
-    e.preventDefault()
-    setIsMobileMenuOpen(false)
-    const target = document.querySelector(href)
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    const target = document.querySelector(href);
     if (target) {
       setTimeout(() => {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 320)
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 320);
     }
-  }
+  };
 
-  const displayedNoteworthy = showAllNoteworthy ? noteworthyProjects : noteworthyProjects.slice(0, 4)
+  const displayedNoteworthy = showAllNoteworthy
+    ? noteworthyProjects
+    : noteworthyProjects.slice(0, 3);
 
   return (
-    <div className={`portfolio-page ${showFrame ? 'is-frame-visible' : ''}`}>
+    <div className={`portfolio-page ${showFrame ? "is-frame-visible" : ""}`}>
       <Preloader onHidden={() => setIsLoaderDone(true)} />
 
       {/* Overlay for closing side drawer */}
-      <div 
-        className={`mobile-menu-overlay ${isMobileMenuOpen ? 'is-active' : ''}`}
+      <div
+        className={`mobile-menu-overlay ${isMobileMenuOpen ? "is-active" : ""}`}
         onClick={closeMobileMenu}
       />
 
       <div className="portfolio-shell">
         <header
-          className={`portfolio-nav ${showNav ? 'is-visible' : ''} ${isAtTop ? 'is-top-page' : 'is-scrolled'} ${isMobileMenuOpen ? 'is-menu-open' : ''}`}
+          className={`portfolio-nav ${showNav ? "is-visible" : ""} ${isAtTop ? "is-top-page" : "is-scrolled"} ${isMobileMenuOpen ? "is-menu-open" : ""}`}
         >
-          <a className="brand-mark" href="#top" aria-label="Home" onClick={(e) => handleNavClick(e, '#top')}>
-            <svg className="brand-mark__icon" viewBox="0 0 100 100" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-              <circle className="brand-mark__circle" cx="50" cy="50" r="36" stroke="currentColor" strokeWidth="12" />
+          <a
+            className="brand-mark"
+            href="#top"
+            aria-label="Home"
+            onClick={(e) => handleNavClick(e, "#top")}
+          >
+            <svg
+              className="brand-mark__icon"
+              viewBox="0 0 100 100"
+              fill="none"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                className="brand-mark__circle"
+                cx="50"
+                cy="50"
+                r="36"
+                stroke="currentColor"
+                strokeWidth="12"
+              />
               <g className="brand-mark__asterisk">
-                <path d="M50 12V88" stroke="currentColor" strokeWidth="12" strokeLinecap="round" />
-                <path d="M18 30L82 70" stroke="currentColor" strokeWidth="12" strokeLinecap="round" />
-                <path d="M18 70L82 30" stroke="currentColor" strokeWidth="12" strokeLinecap="round" />
+                <path
+                  d="M50 12V88"
+                  stroke="currentColor"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M18 30L82 70"
+                  stroke="currentColor"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M18 70L82 30"
+                  stroke="currentColor"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                />
               </g>
             </svg>
           </a>
@@ -384,11 +429,13 @@ function App() {
                 <a
                   key={item.label}
                   href={item.href}
-                  className={activeSection === item.href.slice(1) ? 'is-active' : ''}
-                  style={{ '--nav-index': index }}
+                  className={
+                    activeSection === item.href.slice(1) ? "is-active" : ""
+                  }
+                  style={{ "--nav-index": index }}
                   onClick={(e) => handleNavClick(e, item.href)}
                 >
-                  <span>{String(index + 1).padStart(2, '0')}.</span>
+                  <span>{String(index + 1).padStart(2, "0")}.</span>
                   {item.label}
                 </a>
               ))}
@@ -399,21 +446,29 @@ function App() {
                 className="theme-button"
                 type="button"
                 onClick={toggleTheme}
-                aria-pressed={theme === 'dark'}
-                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-pressed={theme === "dark"}
+                aria-label={
+                  theme === "dark"
+                    ? "Switch to light mode"
+                    : "Switch to dark mode"
+                }
               >
                 <span className="theme-button__icon" aria-hidden="true">
-                  {theme === 'dark' ? <SunMedium size={22} strokeWidth={2.5} /> : <MoonStar size={22} strokeWidth={2.5} />}
+                  {theme === "dark" ? (
+                    <SunMedium size={22} strokeWidth={2.5} />
+                  ) : (
+                    <MoonStar size={22} strokeWidth={2.5} />
+                  )}
                 </span>
               </button>
 
               <button
-                className={`menu-button ${isMobileMenuOpen ? 'is-active' : ''}`}
+                className={`menu-button ${isMobileMenuOpen ? "is-active" : ""}`}
                 type="button"
                 onClick={toggleMobileMenu}
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="primary-navigation"
-                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               >
                 <div className="hamburger">
                   <div className="hamburger-box">
@@ -425,8 +480,15 @@ function App() {
           </div>
 
           {/* Drawer Sidebar Menu */}
-          <div className={`mobile-nav-panel ${isMobileMenuOpen ? 'is-open' : ''}`} id="primary-navigation">
-            <button className="mobile-menu-close" onClick={closeMobileMenu} aria-label="Close menu">
+          <div
+            className={`mobile-nav-panel ${isMobileMenuOpen ? "is-open" : ""}`}
+            id="primary-navigation"
+          >
+            <button
+              className="mobile-menu-close"
+              onClick={closeMobileMenu}
+              aria-label="Close menu"
+            >
               <X size={26} />
             </button>
             <nav className="mobile-nav-links" aria-label="Mobile Primary">
@@ -434,11 +496,13 @@ function App() {
                 <a
                   key={item.label}
                   href={item.href}
-                  className={activeSection === item.href.slice(1) ? 'is-active' : ''}
+                  className={
+                    activeSection === item.href.slice(1) ? "is-active" : ""
+                  }
                   style={{ transitionDelay: `${index * 60}ms` }}
                   onClick={(e) => handleNavClick(e, item.href)}
                 >
-                  <span>{String(index + 1).padStart(2, '0')}.</span>
+                  <span>{String(index + 1).padStart(2, "0")}.</span>
                   {item.label}
                 </a>
               ))}
@@ -446,9 +510,18 @@ function App() {
           </div>
         </header>
 
-        <aside className={`side-rail side-rail--left ${showFrame ? 'is-visible' : ''}`} aria-label="Social links">
+        <aside
+          className={`side-rail side-rail--left ${showFrame ? "is-visible" : ""}`}
+          aria-label="Social links"
+        >
           {socialLinks.map((link) => (
-            <a key={link.label} href={link.href} aria-label={link.label} target="_blank" rel="noreferrer">
+            <a
+              key={link.label}
+              href={link.href}
+              aria-label={link.label}
+              target="_blank"
+              rel="noreferrer"
+            >
               <span className="side-rail__icon" aria-hidden="true">
                 <link.icon size={24} />
               </span>
@@ -457,34 +530,69 @@ function App() {
           <span className="side-rail__line" />
         </aside>
 
-        <aside className={`side-rail side-rail--right ${showFrame ? 'is-visible' : ''}`} aria-label="Contact email">
-          <a className="side-rail__email" href="mailto:aayushkoirala8848@gmail.com" aria-label="Email aayushkoirala8848@gmail.com">
+        <aside
+          className={`side-rail side-rail--right ${showFrame ? "is-visible" : ""}`}
+          aria-label="Contact email"
+        >
+          <a
+            className="side-rail__email"
+            href="mailto:aayushkoirala8848@gmail.com"
+            aria-label="Email aayushkoirala8848@gmail.com"
+          >
             aayushkoirala8848@gmail.com
           </a>
           <span className="side-rail__line" />
         </aside>
 
         <main className="portfolio-content" id="top">
-          <section className={`hero ${showHero ? 'is-visible' : ''}`} id="top">
-            <p className={`hero__eyebrow ${showHero ? 'is-visible' : ''}`}>Hi, my name is</p>
-            <h1 className={`hero__title ${showHero ? 'is-visible' : ''}`}>Aayush Koirala.</h1>
-            <h2 className={`hero__subtitle ${showHero ? 'is-visible' : ''}`}>I build clean digital experiences for the web.</h2>
-            <p className={`hero__copy ${showHero ? 'is-visible' : ''}`}>
-              I design and develop portfolio sites, product pages, and interface systems that feel calm in white mode,
-              sharp in dark mode, and smooth from the moment they load.
+          <section className={`hero ${showHero ? "is-visible" : ""}`} id="top">
+            <p className={`hero__eyebrow ${showHero ? "is-visible" : ""}`}>
+              Hi, my name is
+            </p>
+            <h1 className={`hero__title ${showHero ? "is-visible" : ""}`}>
+              Aayush Koirala.
+            </h1>
+            <h2 className={`hero__subtitle ${showHero ? "is-visible" : ""}`}>
+              I build clean digital experiences for the web.
+            </h2>
+            <p className={`hero__copy ${showHero ? "is-visible" : ""}`}>
+              I specialize in designing and building responsive web applications
+              with clean, intuitive interfaces. From portfolios to full-stack
+              platforms, I create digital experiences that are performant,
+              accessible, and visually refined.
             </p>
 
             <div className="hero__actions">
-              <a className={`button hero__cta ${showCta ? 'is-visible' : ''}`} href="#projects" onClick={(e) => handleNavClick(e, '#projects')}>
-                Explore Work
+              <a
+                className="button"
+                href="#projects"
+                onClick={(e) => handleNavClick(e, "#projects")}
+              >
+                View Projects
               </a>
-              <a className="button hero__contact-link" href="#contact" onClick={(e) => handleNavClick(e, '#contact')}>
+              <a
+                className="button hero__contact-link"
+                href="#contact"
+                onClick={(e) => handleNavClick(e, "#contact")}
+              >
                 Contact Me
+              </a>
+              <a
+                className="button hero__contact-link"
+                href="/Aayush-Koirala_Resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Download size={18} style={{ marginRight: 8 }} />
+                Resume
               </a>
             </div>
           </section>
 
-          <section className="about-section reveal-group reveal-group--about" id="about">
+          <section
+            className="about-section reveal-group reveal-group--about"
+            id="about"
+          >
             <div className="section-heading section-heading--about">
               <span>01.</span>
               <h3>About Me</h3>
@@ -495,21 +603,39 @@ function App() {
               <div className="about-copy">
                 <article className="about-card about-card--bio">
                   <p>
-                    Hello! I&apos;m <strong>Aayush Koirala</strong>, a developer in the making based in Nepal. Currently studying Computer Engineering at{' '}
-                    <strong>Nepal Engineering College</strong>, I am focused on mastering the <strong>MERN stack</strong> for Full Stack Development.
+                    I&apos;m <strong>Aayush Koirala</strong>, a Computer
+                    Engineering student at{" "}
+                    <strong>Nepal Engineering College</strong> with a strong
+                    focus on full-stack web development. I build scalable,
+                    user-centric applications using modern JavaScript ecosystems
+                    and continuously expand my expertise across the stack.
                   </p>
                   <p>
-                    My toolkit centers around <strong>JavaScript</strong>, including <strong>React</strong> for the frontend and <strong>Node.js/Express</strong> for the backend.
-                    I am proficient with <strong>MongoDB</strong> and actively learning <strong>SQL</strong> for relational data architecture.
+                    My primary toolkit includes <strong>React</strong> for
+                    crafting dynamic frontends and{" "}
+                    <strong>Node.js/Express</strong> for building robust backend
+                    services. I work with both <strong>MongoDB</strong> and{" "}
+                    <strong>SQL</strong> databases to design efficient data
+                    architectures, and I hold a certification in{" "}
+                    <a className="cert-link" href="/python_certificate_cs.pdf" target="_blank" rel="noreferrer">
+                      Python for Web Security
+                    </a>, reflecting my
+                    commitment to writing secure, resilient code.
                   </p>
                   <p>
-                    When I&apos;m not building web applications, you can find me immersed in a good book, a movie, or a video game.
+                    Beyond development, I enjoy exploring UI/UX design
+                    principles and staying current with emerging web
+                    technologies. Away from the keyboard, you&apos;ll likely
+                    find me with a book, a film, or a controller in hand.
                   </p>
                 </article>
 
                 <div className="about-skills">
                   {aboutSkills.map((group) => (
-                    <article className="about-card about-card--skills" key={group.title}>
+                    <article
+                      className="about-card about-card--skills"
+                      key={group.title}
+                    >
                       <h4>{group.title}</h4>
                       <ul className="skills-list">
                         {group.items.map((skill) => (
@@ -521,7 +647,10 @@ function App() {
                 </div>
               </div>
 
-              <div className="portrait-swap" aria-label="Portrait of Aayush Koirala">
+              <div
+                className="portrait-swap"
+                aria-label="Portrait of Aayush Koirala"
+              >
                 <div className="portrait-swap__frame">
                   <img
                     className="portrait-swap__image portrait-swap__image--bw"
@@ -541,16 +670,21 @@ function App() {
           <section className="experience-section reveal-group" id="experience">
             <div className="section-heading section-heading--experience">
               <span>02.</span>
-              <h3>Where I've Worked</h3>
+              <h3>What I'm Working On</h3>
               <span className="section-heading__line" aria-hidden="true" />
             </div>
 
             <div className="experience-layout">
-              <div className="tab-list" role="tablist" aria-label="Job tabs" style={{ '--active-index': activeTabId }}>
+              <div
+                className="tab-list"
+                role="tablist"
+                aria-label="Job tabs"
+                style={{ "--active-index": activeTabId }}
+              >
                 {experiences.map((exp, index) => (
                   <button
                     key={exp.company}
-                    className={`tab-button ${activeTabId === index ? 'is-active' : ''}`}
+                    className={`tab-button ${activeTabId === index ? "is-active" : ""}`}
                     onClick={() => setActiveTabId(index)}
                     role="tab"
                     aria-selected={activeTabId === index}
@@ -567,7 +701,7 @@ function App() {
                 {experiences.map((exp, index) => (
                   <div
                     key={exp.company}
-                    className={`tab-panel ${activeTabId === index ? 'is-active' : ''}`}
+                    className={`tab-panel ${activeTabId === index ? "is-active" : ""}`}
                     role="tabpanel"
                     id={`panel-${index}`}
                     aria-labelledby={`tab-${index}`}
@@ -577,12 +711,34 @@ function App() {
                       <span className="job-title">{exp.title}</span>
                       <span className="job-company">
                         &nbsp;@&nbsp;
-                        <a href={exp.url} target="_blank" rel="noreferrer" className="inline-link">
+                        <a
+                          href={exp.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-link"
+                        >
                           {exp.company}
                         </a>
                       </span>
                     </h4>
-                    <p className="job-range">{exp.range}</p>
+                    <p className="job-range">
+                      {exp.range}
+                      {exp.certUrl && (
+                        <a
+                          className="cert-badge"
+                          href={exp.certUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="View certificate"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            <polyline points="15 3 21 3 21 9" />
+                            <line x1="10" y1="14" x2="21" y2="3" />
+                          </svg>
+                        </a>
+                      )}
+                    </p>
                     <ul className="job-duties">
                       {exp.duties.map((duty, i) => (
                         <li key={i}>{duty}</li>
@@ -603,7 +759,10 @@ function App() {
 
             <div className="projects-stack">
               {projects.map((project, index) => (
-                <article className={`project-showcase ${index % 2 === 1 ? 'project-showcase--reverse' : ''}`} key={project.title}>
+                <article
+                  className={`project-showcase ${index % 2 === 1 ? "project-showcase--reverse" : ""}`}
+                  key={project.title}
+                >
                   <div className="project-showcase__media">
                     <a
                       className="project-image-link"
@@ -624,20 +783,10 @@ function App() {
                   </div>
 
                   <div className="project-showcase__details">
-                    <span className="project-kicker">Featured Project</span>
-                    <h4>{project.title}</h4>
-
-                    <div className="project-description-card">
-                      <p>{project.text}</p>
-                    </div>
-
-                    <p className="project-stack">
-                      {project.stack.join(' ')}
-                    </p>
-
-                    <div className="project-links">
+                    <div className="project-title-row">
+                      <h4>{project.title}</h4>
                       <a
-                        className="project-link"
+                        className="project-title-link"
                         href={project.href}
                         target="_blank"
                         rel="noreferrer"
@@ -647,6 +796,12 @@ function App() {
                         <FaGithub size={20} aria-hidden="true" />
                       </a>
                     </div>
+
+                    <div className="project-description-card">
+                      <p>{project.text}</p>
+                    </div>
+
+                    <p className="project-stack">{project.stack.join(" ")}</p>
                   </div>
                 </article>
               ))}
@@ -655,8 +810,10 @@ function App() {
 
           {/* New Noteworthy Projects Section */}
           <section className="noteworthy-section reveal-group" id="noteworthy">
-            <div className="section-heading noteworthy-heading">
+            <div className="section-heading section-heading--projects noteworthy-heading">
+              <span>04.</span>
               <h3>Other Noteworthy Projects</h3>
+              <span className="section-heading__line" aria-hidden="true" />
             </div>
 
             <div className="noteworthy-grid">
@@ -665,11 +822,21 @@ function App() {
                   <div className="card-top">
                     <Folder className="folder-icon" size={36} />
                     <div className="card-links">
-                      <a href={proj.github} target="_blank" rel="noreferrer" aria-label="GitHub">
+                      <a
+                        href={proj.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="GitHub"
+                      >
                         <FaGithub size={20} />
                       </a>
-                      {proj.external && proj.external !== '#' && (
-                        <a href={proj.external} target="_blank" rel="noreferrer" aria-label="External Link">
+                      {proj.external && proj.external !== "#" && (
+                        <a
+                          href={proj.external}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label="External Link"
+                        >
                           <ExternalLink size={20} />
                         </a>
                       )}
@@ -689,11 +856,11 @@ function App() {
               ))}
             </div>
 
-            <button 
+            <button
               className="button noteworthy-toggle-btn"
               onClick={() => setShowAllNoteworthy(!showAllNoteworthy)}
             >
-              Show {showAllNoteworthy ? 'Less' : 'More'}
+              Show {showAllNoteworthy ? "Less" : "More"}
             </button>
           </section>
 
@@ -704,18 +871,68 @@ function App() {
               <span className="section-heading__line" aria-hidden="true" />
             </div>
 
-            <p className="contact-copy" style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem' }}>
-              I am currently looking for new opportunities and my inbox is always open. Whether you have a question or just want to say hi, I’ll try my best to get back to you!
+            <p
+              className="contact-copy"
+              style={{
+                textAlign: "center",
+                maxWidth: "600px",
+                margin: "0 auto",
+                fontSize: "1.1rem",
+              }}
+            >
+              I am currently looking for new opportunities and my inbox is
+              always open. Whether you have a question or just want to say hi,
+              I’ll try my best to get back to you!
             </p>
 
-            <a className="button" href="mailto:aayushkoirala8848@gmail.com" style={{ margin: '30px auto 0', display: 'inline-flex' }}>
+            <button
+              className="button"
+              onClick={() => setIsContactOpen(true)}
+              style={{ margin: "30px auto 0", display: "inline-flex", cursor: "pointer" }}
+            >
               Say Hello
-            </a>
+            </button>
           </section>
         </main>
       </div>
+
+      {isContactOpen && (
+        <div className="contact-overlay" onClick={() => setIsContactOpen(false)}>
+          <div className="contact-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="contact-modal__close"
+              onClick={() => setIsContactOpen(false)}
+              aria-label="Close"
+            >
+              <X size={22} />
+            </button>
+            <h3>Get in Touch</h3>
+            <div className="contact-modal__options">
+              <a
+                className="contact-modal__option"
+                href="https://wa.me/9779804014936"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <FaWhatsapp size={28} />
+                <span>WhatsApp</span>
+              </a>
+              <a
+                className="contact-modal__option"
+                href="mailto:aayushkoirala8848@gmail.com"
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M22 4L12 13 2 4" />
+                </svg>
+                <span>Email</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
