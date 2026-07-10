@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Download, MoonStar, SunMedium, X, Folder, ExternalLink, ChevronDown } from "lucide-react";
 import { FaGithub, FaInstagram, FaLinkedinIn, FaWhatsapp } from "react-icons/fa6";
 import Preloader from "./components/Preloader";
+import TechIcon from "./components/TechIcon";
 import "./App.css";
 
 const navItems = [
@@ -214,15 +215,12 @@ function App() {
 
     const updateNavVisibility = () => {
       const currentScrollY = window.scrollY;
-      const atTop = currentScrollY < 50;
       const scrollingUp = currentScrollY < lastScrollY;
       const scrollingDown = currentScrollY > lastScrollY;
 
-      setIsAtTop(atTop);
+      setIsAtTop(currentScrollY < 50);
 
-      if (atTop) {
-        setShowNav(true);
-      } else if (scrollingDown) {
+      if (scrollingDown) {
         setShowNav(false);
         setIsMobileMenuOpen(false);
       } else if (scrollingUp) {
@@ -816,7 +814,7 @@ function App() {
 
                     <div className="project-stack">
                       {project.stack.map((tech) => (
-                        <span key={tech}>{tech}</span>
+                        <TechIcon key={tech} name={tech} size={18} />
                       ))}
                     </div>
                   </div>
@@ -877,7 +875,7 @@ function App() {
 
                     <ul className="card-tech">
                       {proj.tech.map((t) => (
-                        <li key={t}>{t}</li>
+                        <li key={t}><TechIcon name={t} size={14} /></li>
                       ))}
                     </ul>
                   </article>
