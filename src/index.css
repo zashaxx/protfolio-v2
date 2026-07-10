@@ -34,9 +34,17 @@ html.dark,
   padding: 0;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
 html {
   scroll-behavior: smooth;
   background-color: var(--bg-main);
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 body {
@@ -80,6 +88,7 @@ section {
 
 #root {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 ::view-transition {

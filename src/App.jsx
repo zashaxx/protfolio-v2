@@ -1,6 +1,6 @@
 import { flushSync } from "react-dom";
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { Download, MoonStar, SunMedium, X, Folder, ExternalLink } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Download, MoonStar, SunMedium, X, Folder, ExternalLink, ChevronDown } from "lucide-react";
 import { FaGithub, FaInstagram, FaLinkedinIn, FaWhatsapp } from "react-icons/fa6";
 import Preloader from "./components/Preloader";
 import "./App.css";
@@ -178,6 +178,7 @@ function App() {
   const [activeTabId, setActiveTabId] = useState(0);
   const [showAllNoteworthy, setShowAllNoteworthy] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const noteworthyPrevCount = useRef(3);
 
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -240,8 +241,8 @@ function App() {
     };
 
     const navTimer = window.setTimeout(() => setShowNav(true), 0);
-    const heroTimer = window.setTimeout(() => setShowHero(true), 1150);
-    const frameTimer = window.setTimeout(() => setShowFrame(true), 2650);
+    const heroTimer = window.setTimeout(() => setShowHero(true), 575);
+    const frameTimer = window.setTimeout(() => setShowFrame(true), 1325);
     window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
@@ -361,9 +362,18 @@ function App() {
     }
   };
 
+  const INITIAL_NOTEWORTHY_COUNT = 3;
   const displayedNoteworthy = showAllNoteworthy
     ? noteworthyProjects
-    : noteworthyProjects.slice(0, 3);
+    : noteworthyProjects.slice(0, INITIAL_NOTEWORTHY_COUNT);
+
+  const handleToggleNoteworthy = () => {
+    const wasShowingAll = showAllNoteworthy;
+    setShowAllNoteworthy((prev) => !prev);
+    noteworthyPrevCount.current = wasShowingAll
+      ? INITIAL_NOTEWORTHY_COUNT
+      : noteworthyProjects.length;
+  };
 
   return (
     <div className={`portfolio-page ${showFrame ? "is-frame-visible" : ""}`}>
@@ -479,36 +489,37 @@ function App() {
             </div>
           </div>
 
-          {/* Drawer Sidebar Menu */}
-          <div
-            className={`mobile-nav-panel ${isMobileMenuOpen ? "is-open" : ""}`}
-            id="primary-navigation"
-          >
-            <button
-              className="mobile-menu-close"
-              onClick={closeMobileMenu}
-              aria-label="Close menu"
-            >
-              <X size={26} />
-            </button>
-            <nav className="mobile-nav-links" aria-label="Mobile Primary">
-              {navItems.map((item, index) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className={
-                    activeSection === item.href.slice(1) ? "is-active" : ""
-                  }
-                  style={{ transitionDelay: `${index * 60}ms` }}
-                  onClick={(e) => handleNavClick(e, item.href)}
-                >
-                  <span>{String(index + 1).padStart(2, "0")}.</span>
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-          </div>
         </header>
+
+        {/* Drawer Sidebar Menu — outside header so position:fixed resolves to viewport */}
+        <div
+          className={`mobile-nav-panel ${isMobileMenuOpen ? "is-open" : ""}`}
+          id="primary-navigation"
+        >
+          <button
+            className="mobile-menu-close"
+            onClick={closeMobileMenu}
+            aria-label="Close menu"
+          >
+            <X size={26} />
+          </button>
+          <nav className="mobile-nav-links" aria-label="Mobile Primary">
+            {navItems.map((item, index) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className={
+                  activeSection === item.href.slice(1) ? "is-active" : ""
+                }
+                style={{ transitionDelay: `${index * 60}ms` }}
+                onClick={(e) => handleNavClick(e, item.href)}
+              >
+                <span>{String(index + 1).padStart(2, "0")}.</span>
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
 
         <aside
           className={`side-rail side-rail--left ${showFrame ? "is-visible" : ""}`}
@@ -801,7 +812,11 @@ function App() {
                       <p>{project.text}</p>
                     </div>
 
-                    <p className="project-stack">{project.stack.join(" ")}</p>
+                    <div className="project-stack">
+                      {project.stack.map((tech) => (
+                        <span key={tech}>{tech}</span>
+                      ))}
+                    </div>
                   </div>
                 </article>
               ))}
@@ -809,7 +824,7 @@ function App() {
           </section>
 
           {/* New Noteworthy Projects Section */}
-          <section className="noteworthy-section reveal-group" id="noteworthy">
+          <section className="noteworthy-section reveal-group reveal-group--noteworthy" id="noteworthy">
             <div className="section-heading section-heading--projects noteworthy-heading">
               <span>04.</span>
               <h3>Other Noteworthy Projects</h3>
@@ -817,50 +832,70 @@ function App() {
             </div>
 
             <div className="noteworthy-grid">
-              {displayedNoteworthy.map((proj) => (
-                <article className="noteworthy-card" key={proj.title}>
-                  <div className="card-top">
-                    <Folder className="folder-icon" size={36} />
-                    <div className="card-links">
-                      <a
-                        href={proj.github}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="GitHub"
-                      >
-                        <FaGithub size={20} />
-                      </a>
-                      {proj.external && proj.external !== "#" && (
+              {displayedNoteworthy.map((proj, i) => {
+                const isRevealed = showAllNoteworthy && i >= INITIAL_NOTEWORTHY_COUNT;
+                const staggerIndex = isRevealed ? i - INITIAL_NOTEWORTHY_COUNT : 0;
+                return (
+                  <article
+                    className={`noteworthy-card ${isRevealed ? "noteworthy-card--reveal" : ""}`}
+                    key={proj.title}
+                    style={
+                      isRevealed
+                        ? { animationDelay: `${staggerIndex * 100}ms` }
+                        : undefined
+                    }
+                  >
+                    <div className="card-top">
+                      <Folder className="folder-icon" size={36} />
+                      <div className="card-links">
                         <a
-                          href={proj.external}
+                          href={proj.github}
                           target="_blank"
                           rel="noreferrer"
-                          aria-label="External Link"
+                          aria-label="GitHub"
                         >
-                          <ExternalLink size={20} />
+                          <FaGithub size={20} />
                         </a>
-                      )}
+                        {proj.external && proj.external !== "#" && (
+                          <a
+                            href={proj.external}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label="External Link"
+                          >
+                            <ExternalLink size={20} />
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <h4 className="card-title">{proj.title}</h4>
+                    <h4 className="card-title">{proj.title}</h4>
 
-                  <p className="card-description">{proj.text}</p>
+                    <p className="card-description">{proj.text}</p>
 
-                  <ul className="card-tech">
-                    {proj.tech.map((t) => (
-                      <li key={t}>{t}</li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
+                    <ul className="card-tech">
+                      {proj.tech.map((t) => (
+                        <li key={t}>{t}</li>
+                      ))}
+                    </ul>
+                  </article>
+                );
+              })}
             </div>
 
             <button
               className="button noteworthy-toggle-btn"
-              onClick={() => setShowAllNoteworthy(!showAllNoteworthy)}
+              onClick={handleToggleNoteworthy}
             >
               Show {showAllNoteworthy ? "Less" : "More"}
+              <ChevronDown
+                size={18}
+                style={{
+                  marginLeft: 6,
+                  transform: showAllNoteworthy ? "rotate(180deg)" : "none",
+                  transition: "transform 0.25s ease",
+                }}
+              />
             </button>
           </section>
 

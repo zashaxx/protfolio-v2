@@ -63,6 +63,7 @@ export default function Preloader({ onHidden }) {
           src={loaderAnimation}
           autoplay
           loop={false}
+          speed={2}
           useFrameInterpolation={false}
           dotLottieRefCallback={handlePlayerReady}
         />
@@ -87,7 +88,7 @@ export default function Preloader({ onHidden }) {
           aspect-ratio: 1;
           opacity: 1;
           transform: scale(1);
-          transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1), opacity 650ms cubic-bezier(0.22, 1, 0.36, 1);
+          transition: transform 325ms cubic-bezier(0.22, 1, 0.36, 1), opacity 325ms cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .preloader__stage--exit {
