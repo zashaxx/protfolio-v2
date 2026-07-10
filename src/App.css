@@ -77,10 +77,10 @@
 
 html.dark .portfolio-nav::before,
 [data-theme="dark"] .portfolio-nav::before {
-  background: rgba(10, 25, 47, 0.85);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(120px) saturate(180%);
   -webkit-backdrop-filter: blur(120px) saturate(180%);
-  border-bottom: 1px solid rgba(100, 140, 200, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .nav-cluster {
@@ -895,13 +895,13 @@ html.dark .projects-section,
 [data-theme="dark"] .projects-section {
   --projects-accent: #64ffda;
   --projects-accent-soft: rgba(100, 255, 218, 0.12);
-  --projects-image-start: rgba(36, 89, 102, 0.96);
-  --projects-image-end: rgba(15, 44, 72, 0.98);
-  --projects-image-border: rgba(100, 255, 218, 0.12);
-  --projects-image-shadow: 0 30px 70px rgba(2, 12, 27, 0.62);
-  --projects-description-bg: rgba(11, 28, 52, 0.98);
-  --projects-description-border: rgba(100, 255, 218, 0.1);
-  --projects-description-shadow: 0 22px 48px rgba(2, 12, 27, 0.46);
+  --projects-image-start: #000000;
+  --projects-image-end: #000000;
+  --projects-image-border: rgba(255, 255, 255, 0.15);
+  --projects-image-shadow: 0 30px 70px rgba(0, 0, 0, 0.62);
+  --projects-description-bg: #000000;
+  --projects-description-border: rgba(255, 255, 255, 0.2);
+  --projects-description-shadow: 0 22px 48px rgba(0, 0, 0, 0.46);
   --projects-description-text: #d8e4ff;
   --projects-kicker: #64ffda;
   --projects-label: #a7b4c8;
@@ -2097,14 +2097,15 @@ body.blur-active
   --card-bg: #ffffff;
 }
 
-/* Dark mode: a slightly lighter navy so cards pop off the page background */
+/* Dark mode: a slightly lighter shade so cards pop off the page background */
 html.dark,
 [data-theme="dark"] {
-  --card-bg: rgba(17, 34, 64, 0.98);
+  --card-bg: #000000;
 }
 
 /* Lift only – NO border colour change */
 .noteworthy-card:hover {
+  animation: none;
   transform: translateY(-7px);
   box-shadow: 0 10px 30px -15px rgba(2, 12, 27, 0.35);
 }

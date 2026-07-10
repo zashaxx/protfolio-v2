@@ -313,13 +313,9 @@ function App() {
 
   const toggleTheme = (event) => {
     const nextTheme = theme === "dark" ? "light" : "dark";
-    const fallbackRect = event.currentTarget.getBoundingClientRect();
-    const originX = event.clientX || fallbackRect.left + fallbackRect.width / 2;
-    const originY = event.clientY || fallbackRect.top + fallbackRect.height / 2;
-
-    document.documentElement.style.setProperty("--x", `${originX}px`);
-    document.documentElement.style.setProperty("--y", `${originY}px`);
-    document.documentElement.dataset.transitionTheme = nextTheme;
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
 
     const commitTheme = () => {
       document.documentElement.classList.toggle("dark", nextTheme === "dark");
@@ -327,19 +323,48 @@ function App() {
       setTheme(nextTheme);
     };
 
-    if (typeof document.startViewTransition === "function") {
-      const transition = document.startViewTransition(() => {
-        flushSync(commitTheme);
-      });
+    const isAppearanceTransition =
+      typeof document.startViewTransition === "function" &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      transition.finished.finally(() => {
-        delete document.documentElement.dataset.transitionTheme;
-      });
+    if (!isAppearanceTransition) {
+      flushSync(commitTheme);
       return;
     }
 
-    flushSync(commitTheme);
-    delete document.documentElement.dataset.transitionTheme;
+    document.documentElement.dataset.transitioning = "";
+
+    const transition = document.startViewTransition(() => {
+      flushSync(commitTheme);
+    });
+
+    transition.finished.finally(() => {
+      delete document.documentElement.dataset.transitioning;
+    });
+
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+      document.documentElement.animate(
+        {
+          clipPath:
+            nextTheme === "dark"
+              ? [...clipPath].reverse()
+              : clipPath,
+        },
+        {
+          duration: 400,
+          easing: "ease-out",
+          fill: "forwards",
+          pseudoElement:
+            nextTheme === "dark"
+              ? "::view-transition-old(root)"
+              : "::view-transition-new(root)",
+        },
+      );
+    });
   };
 
   const toggleMobileMenu = () => {
