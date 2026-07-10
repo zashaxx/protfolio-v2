@@ -214,17 +214,19 @@ function App() {
 
     const updateNavVisibility = () => {
       const currentScrollY = window.scrollY;
-      const atTop = currentScrollY <= 24;
+      const atTop = currentScrollY < 50;
       const scrollingUp = currentScrollY < lastScrollY;
       const scrollingDown = currentScrollY > lastScrollY;
 
       setIsAtTop(atTop);
 
-      if (scrollingUp) {
+      if (atTop) {
         setShowNav(true);
       } else if (scrollingDown) {
         setShowNav(false);
         setIsMobileMenuOpen(false);
+      } else if (scrollingUp) {
+        setShowNav(true);
       }
 
       lastScrollY = currentScrollY;
