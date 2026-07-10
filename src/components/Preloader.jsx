@@ -6,7 +6,6 @@ export default function Preloader({ onHidden }) {
   const [isExiting, setIsExiting] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
   const previousOverflowRef = useRef('')
-  const onCompleteRef = useRef(null)
 
   useEffect(() => {
     previousOverflowRef.current = document.body.style.overflow
@@ -33,15 +32,25 @@ export default function Preloader({ onHidden }) {
       return
     }
 
-    onCompleteRef.current = () => {
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          setIsExiting(true)
-        })
-      })
+    const onReady = () => {
+      const half = Math.floor(dotLottie.totalFrames / 2)
+
+      const onFrame = () => {
+        if (dotLottie.currentFrame >= half) {
+          dotLottie.removeEventListener('frame', onFrame)
+          dotLottie.pause()
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+              setIsExiting(true)
+            })
+          })
+        }
+      }
+
+      dotLottie.addEventListener('frame', onFrame)
     }
 
-    dotLottie.addEventListener('complete', onCompleteRef.current)
+    dotLottie.addEventListener('load', onReady)
   }
 
   const handleExitTransitionEnd = () => {
@@ -63,7 +72,6 @@ export default function Preloader({ onHidden }) {
           src={loaderAnimation}
           autoplay
           loop={false}
-          speed={2}
           useFrameInterpolation={false}
           dotLottieRefCallback={handlePlayerReady}
         />
