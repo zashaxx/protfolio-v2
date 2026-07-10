@@ -12,6 +12,9 @@
   --portrait-border: #071428;
   --shadow: 0 20px 60px rgba(48, 70, 112, 0.12);
   --button-accent: #172033;
+  --green: #64ffda;
+  --card-shadow: 0 10px 30px -15px rgba(2, 12, 27, 0.7);
+  --card-shadow-hover: 0 20px 30px -15px rgba(2, 12, 27, 0.7);
 }
 
 html.dark,
@@ -26,6 +29,9 @@ html.dark,
   --portrait-border: #ffffff;
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
   --button-accent: #ffffff;
+  --green: #64ffda;
+  --card-shadow: 0 10px 30px -15px rgba(255, 255, 255, 0.08);
+  --card-shadow-hover: 0 20px 30px -15px rgba(255, 255, 255, 0.15);
 }
 
 * {

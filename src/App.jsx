@@ -4,6 +4,7 @@ import { Download, MoonStar, SunMedium, X, Folder, ExternalLink, ChevronDown } f
 import { FaGithub, FaInstagram, FaLinkedinIn, FaWhatsapp } from "react-icons/fa6";
 import Preloader from "./components/Preloader";
 import TechIcon from "./components/TechIcon";
+import Logo from "./components/Logo";
 import "./App.css";
 
 const navItems = [
@@ -311,6 +312,24 @@ function App() {
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    const grid = document.querySelector(".noteworthy-grid");
+    if (!grid) return;
+
+    const onMouseMove = (e) => {
+      for (const card of grid.children) {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty("--mouse-x", `${x}px`);
+        card.style.setProperty("--mouse-y", `${y}px`);
+      }
+    };
+
+    grid.addEventListener("mousemove", onMouseMove);
+    return () => grid.removeEventListener("mousemove", onMouseMove);
+  }, []);
+
   const toggleTheme = (event) => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     const x = event.clientX;
@@ -420,42 +439,7 @@ function App() {
             aria-label="Home"
             onClick={(e) => handleNavClick(e, "#top")}
           >
-            <svg
-              className="brand-mark__icon"
-              viewBox="0 0 100 100"
-              fill="none"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                className="brand-mark__circle"
-                cx="50"
-                cy="50"
-                r="36"
-                stroke="currentColor"
-                strokeWidth="12"
-              />
-              <g className="brand-mark__asterisk">
-                <path
-                  d="M50 12V88"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M18 30L82 70"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M18 70L82 30"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                />
-              </g>
-            </svg>
+            <Logo />
           </a>
 
           <div className="nav-cluster">
@@ -973,6 +957,7 @@ function App() {
                 href="https://wa.me/9779804014936"
                 target="_blank"
                 rel="noreferrer"
+                style={{"--accent": "#25D366", "--accent-soft": "rgba(37, 211, 102, 0.1)"}}
               >
                 <FaWhatsapp size={28} />
                 <span>WhatsApp</span>
@@ -980,6 +965,7 @@ function App() {
               <a
                 className="contact-modal__option"
                 href="mailto:aayushkoirala8848@gmail.com"
+                style={{"--accent": "#64b5f6", "--accent-soft": "rgba(100, 181, 246, 0.1)"}}
               >
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2" />
