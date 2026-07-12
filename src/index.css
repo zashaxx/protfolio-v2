@@ -135,6 +135,12 @@ section {
     transform: none !important;
   }
 
+  .scroll-reveal,
+  .scroll-reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   .portfolio-nav {
     transition: none !important;
   }

@@ -1,3 +1,4 @@
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { FaGithub, FaGitlab } from 'react-icons/fa6';
 import {
   SiReact,
@@ -14,6 +15,7 @@ import {
   SiClerk,
   SiOpenai,
   SiCss,
+  SiHtml5,
   SiJavascript,
   SiVercel,
   SiFastapi,
@@ -25,6 +27,7 @@ import {
 } from 'react-icons/si';
 
 const iconMap = {
+  'HTML': SiHtml5,
   'React': SiReact,
   'Node.js': SiNodedotjs,
   'Express': SiExpress,
@@ -54,6 +57,7 @@ const iconMap = {
 };
 
 const brandColors = {
+  'HTML': '#E34F26',
   'React': '#61DAFB',
   'Node.js': '#339933',
   'Express': '#000000',
@@ -82,9 +86,35 @@ const brandColors = {
   'GitLab': '#FC6D26',
 };
 
-export default function TechIcon({ name, size = 16 }) {
+export default function TechIcon({ name, size = 16, collapsed = false }) {
+  const [open, setOpen] = useState(false);
+  const selfRef = useRef(null);
   const Icon = iconMap[name];
   const brandColor = brandColors[name];
+
+  const toggle = useCallback(() => {
+    if (!collapsed) return;
+    setOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        window.dispatchEvent(
+          new CustomEvent('tech-icon-close-others', { detail: selfRef.current })
+        );
+      }
+      return next;
+    });
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (!collapsed) return;
+    const handler = (e) => {
+      if (e.detail !== selfRef.current) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener('tech-icon-close-others', handler);
+    return () => window.removeEventListener('tech-icon-close-others', handler);
+  }, [collapsed]);
 
   if (!Icon) {
     return <span>{name}</span>;
@@ -92,10 +122,13 @@ export default function TechIcon({ name, size = 16 }) {
 
   return (
     <span
-      className="tech-icon"
-      tabIndex={0}
-      role="button"
+      ref={selfRef}
+      className={`tech-icon ${collapsed ? 'tech-icon--collapsed' : ''} ${open ? 'is-open' : ''}`}
       style={brandColor ? { '--brand': brandColor } : undefined}
+      onClick={(e) => { e.stopPropagation(); toggle(); }}
+      role={collapsed ? 'button' : undefined}
+      tabIndex={collapsed ? 0 : undefined}
+      onKeyDown={collapsed ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } } : undefined}
     >
       <Icon size={size} />
       <span className="tech-icon__label">{name}</span>

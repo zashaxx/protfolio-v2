@@ -84,6 +84,7 @@ const projects = [
     href: "https://github.com/zashaxx/GoodNotesFinal",
     stack: ["React", "Firebase", "Responsive UI", "Content Management"],
     accent: "G",
+    align: "left",
   },
   {
     title: "Nep Tube",
@@ -118,10 +119,10 @@ const noteworthyProjects = [
     tech: ["FastAPI", "React", "Python", "SQLAlchemy", "REST API"],
   },
   {
-    title: "Portfolio v2 (React + Vite)",
+    title: "Portfolio (React + Vite)",
     text: "A personal portfolio website built with React and Vite, featuring a clean design system, dark/light theme support, smooth scroll animations, and fully responsive layouts.",
     github: "https://github.com/zashaxx/protfolio-v2",
-    external: "",
+    external: "https://aayush-koirala.com.np",
     tech: ["React", "Vite", "CSS3", "JavaScript"],
   },
 ];
@@ -132,24 +133,24 @@ const aboutSkills = [
     items: [
       "HTML",
       "CSS",
-      "JavaScript (ES6+)",
-      "React JS",
-      "Next JS",
+      "JavaScript",
+      "React",
+      "Next.js",
       "SASS/SCSS",
     ],
   },
   {
     title: "Backend, Security & Tools",
     items: [
-      "Node JS",
-      "Express JS",
+      "Node.js",
+      "Express",
       "Python",
       "FastAPI",
       "MongoDB",
       "SQL",
       "REST APIs",
-      "Git / GitHub",
-      "Web Security Fundamentals",
+      "Git",
+      "Web Security",
     ],
   },
 ];
@@ -181,6 +182,9 @@ function App() {
   const [showAllNoteworthy, setShowAllNoteworthy] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const noteworthyPrevCount = useRef(3);
+  const showMoreTimer = useRef(null);
+
+
 
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -279,6 +283,12 @@ function App() {
           if (entry.isIntersecting) {
             entry.target.classList.add("is-revealed");
             obs.unobserve(entry.target);
+
+            if (entry.target.classList.contains("reveal-group--noteworthy")) {
+              setTimeout(() => {
+                entry.target.classList.add("reveal-done");
+              }, 1050);
+            }
           }
         });
       },
@@ -292,9 +302,29 @@ function App() {
     const revealElements = document.querySelectorAll(".reveal-group");
     revealElements.forEach((el) => revealObserver.observe(el));
 
+    const scrollRevealObserver = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "0px 0px -8% 0px",
+        threshold: 0.1,
+      },
+    );
+
+    const scrollRevealElements = document.querySelectorAll(".scroll-reveal");
+    scrollRevealElements.forEach((el) => scrollRevealObserver.observe(el));
+
     return () => {
       observer.disconnect();
       revealObserver.disconnect();
+      scrollRevealObserver.disconnect();
     };
   }, [isLoaderDone]);
 
@@ -419,6 +449,26 @@ function App() {
       : noteworthyProjects.length;
   };
 
+  useLayoutEffect(() => {
+    const grid = document.querySelector(".noteworthy-grid");
+    if (!grid) return;
+
+    clearTimeout(showMoreTimer.current);
+
+    if (showAllNoteworthy) {
+      grid.classList.add("noteworthy-grid--revealed");
+      grid.classList.remove("noteworthy-grid--reveal-done");
+      showMoreTimer.current = setTimeout(() => {
+        grid.classList.remove("noteworthy-grid--revealed");
+        grid.classList.add("noteworthy-grid--reveal-done");
+      }, 800);
+    } else {
+      grid.classList.remove("noteworthy-grid--revealed", "noteworthy-grid--reveal-done");
+    }
+
+    return () => clearTimeout(showMoreTimer.current);
+  }, [showAllNoteworthy]);
+
   return (
     <div className={`portfolio-page ${showFrame ? "is-frame-visible" : ""}`}>
       <Preloader onHidden={() => setIsLoaderDone(true)} />
@@ -494,6 +544,9 @@ function App() {
                     <div className="hamburger-inner"></div>
                   </div>
                 </div>
+                <span className="menu-close-icon" aria-hidden="true">
+                  <X size={20} />
+                </span>
               </button>
             </div>
           </div>
@@ -559,6 +612,11 @@ function App() {
             href="mailto:aayushkoirala8848@gmail.com"
             aria-label="Email aayushkoirala8848@gmail.com"
           >
+            <span className="side-rail__arrow" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+            </span>
             aayushkoirala8848@gmail.com
           </a>
           <span className="side-rail__line" />
@@ -649,22 +707,6 @@ function App() {
                     find me with a book, a film, or a controller in hand.
                   </p>
                 </article>
-
-                <div className="about-skills">
-                  {aboutSkills.map((group) => (
-                    <article
-                      className="about-card about-card--skills"
-                      key={group.title}
-                    >
-                      <h4>{group.title}</h4>
-                      <ul className="skills-list">
-                        {group.items.map((skill) => (
-                          <li key={skill}>{skill}</li>
-                        ))}
-                      </ul>
-                    </article>
-                  ))}
-                </div>
               </div>
 
               <div
@@ -685,16 +727,32 @@ function App() {
                 </div>
               </div>
             </div>
+
+            <div className="about-skills">
+              {aboutSkills.map((group) => (
+                <article
+                  className="about-card about-card--skills"
+                  key={group.title}
+                >
+                  <h4>{group.title}</h4>
+                  <ul className="skills-list">
+                    {group.items.map((skill) => (
+                      <li key={skill}><TechIcon name={skill} size={16} /></li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </section>
 
           <section className="experience-section reveal-group" id="experience">
-            <div className="section-heading section-heading--experience">
+            <div className="section-heading section-heading--experience scroll-reveal">
               <span>02.</span>
               <h3>What I'm Working On</h3>
               <span className="section-heading__line" aria-hidden="true" />
             </div>
 
-            <div className="experience-layout">
+            <div className="experience-layout scroll-reveal">
               <div
                 className="tab-list"
                 role="tablist"
@@ -771,7 +829,7 @@ function App() {
           </section>
 
           <section className="projects-section reveal-group" id="projects">
-            <div className="section-heading section-heading--projects">
+            <div className="section-heading section-heading--projects scroll-reveal">
               <span>03.</span>
               <h3>Some Things I've Built</h3>
               <span className="section-heading__line" aria-hidden="true" />
@@ -780,7 +838,7 @@ function App() {
             <div className="projects-stack">
               {projects.map((project, index) => (
                 <article
-                  className={`project-showcase ${index % 2 === 1 ? "project-showcase--reverse" : ""}`}
+                  className={`project-showcase ${index % 2 === 1 ? "project-showcase--reverse" : ""} ${project.align === "left" ? "project-showcase--left" : ""} scroll-reveal`}
                   key={project.title}
                 >
                   <div className="project-showcase__media">
@@ -805,16 +863,6 @@ function App() {
                   <div className="project-showcase__details">
                     <div className="project-title-row">
                       <h4>{project.title}</h4>
-                      <a
-                        className="project-title-link"
-                        href={project.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`Open ${project.title} on GitHub`}
-                        title={`Open ${project.title} on GitHub`}
-                      >
-                        <FaGithub size={20} aria-hidden="true" />
-                      </a>
                     </div>
 
                     <div className="project-description-card">
@@ -823,8 +871,19 @@ function App() {
 
                     <div className="project-stack">
                       {project.stack.map((tech) => (
-                        <TechIcon key={tech} name={tech} size={18} />
+                        <TechIcon key={tech} name={tech} size={18} collapsed />
                       ))}
+                    </div>
+
+                    <div className="project-links">
+                      <a
+                        href={project.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="GitHub"
+                      >
+                        <FaGithub size={24} />
+                      </a>
                     </div>
                   </div>
                 </article>
@@ -834,7 +893,7 @@ function App() {
 
           {/* New Noteworthy Projects Section */}
           <section className="noteworthy-section reveal-group reveal-group--noteworthy" id="noteworthy">
-            <div className="section-heading section-heading--projects noteworthy-heading">
+            <div className="section-heading section-heading--projects noteworthy-heading scroll-reveal">
               <span>04.</span>
               <h3>Other Noteworthy Projects</h3>
               <span className="section-heading__line" aria-hidden="true" />
@@ -848,9 +907,10 @@ function App() {
                   <article
                     className={`noteworthy-card ${isRevealed ? "noteworthy-card--reveal" : ""}`}
                     key={proj.title}
+                    onClick={() => window.open(proj.external || proj.github, "_blank", "noopener,noreferrer")}
                     style={
                       isRevealed
-                        ? { animationDelay: `${staggerIndex * 100}ms` }
+                        ? { transitionDelay: `${staggerIndex * 100}ms` }
                         : undefined
                     }
                   >
@@ -884,7 +944,7 @@ function App() {
 
                     <ul className="card-tech">
                       {proj.tech.map((t) => (
-                        <li key={t}><TechIcon name={t} size={14} /></li>
+                        <li key={t}><TechIcon name={t} size={14} collapsed /></li>
                       ))}
                     </ul>
                   </article>
@@ -909,14 +969,14 @@ function App() {
           </section>
 
           <section className="contact-section reveal-group" id="contact">
-            <div className="section-heading">
+            <div className="section-heading scroll-reveal">
               <span>04.</span>
               <h3>Get In Touch</h3>
               <span className="section-heading__line" aria-hidden="true" />
             </div>
 
             <p
-              className="contact-copy"
+              className="contact-copy scroll-reveal"
               style={{
                 textAlign: "center",
                 maxWidth: "600px",
