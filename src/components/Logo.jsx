@@ -1,17 +1,13 @@
 import { useRef, useState, useLayoutEffect } from "react";
 
-export default function Logo() {
+export default function Logo({ animate = true }) {
   const pathRef = useRef(null);
   const [animKey, setAnimKey] = useState(0);
 
   useLayoutEffect(() => {
-    if (!pathRef.current) return;
-    const dur = (Math.random() * 3 + 4).toFixed(2);
-    const timing = ["ease", "linear", "ease-in-out", "cubic-bezier(0.4, 0, 0.2, 1)"][
-      Math.floor(Math.random() * 4)
-    ];
-    pathRef.current.style.animation = `draw-undraw ${dur}s ${timing} infinite`;
-  }, [animKey]);
+    if (!pathRef.current || !animate) return;
+    pathRef.current.style.animation = `draw-undraw 12s ease-in-out infinite`;
+  }, [animKey, animate]);
 
   const handleClick = () => setAnimKey((k) => k + 1);
 

@@ -32,6 +32,8 @@ export default function Preloader({ onHidden }) {
       return
     }
 
+    dotLottie.setSpeed(0.5)
+
     const onReady = () => {
       const half = Math.floor(dotLottie.totalFrames / 2)
 

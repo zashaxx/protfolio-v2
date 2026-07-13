@@ -494,7 +494,7 @@ function App() {
             aria-label="Home"
             onClick={(e) => handleNavClick(e, "#top")}
           >
-            <Logo />
+            <Logo animate={showHero} />
           </a>
 
           <div className="nav-cluster">
