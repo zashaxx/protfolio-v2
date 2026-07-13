@@ -190,6 +190,11 @@ function App() {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.setAttribute("data-theme", theme);
     window.localStorage.setItem("theme", theme);
+
+    const link = document.querySelector("link[rel='icon']");
+    if (link) {
+      link.href = theme === "dark" ? "/favicon-light.svg" : "/favicon.svg";
+    }
   }, [theme]);
 
   useEffect(() => {

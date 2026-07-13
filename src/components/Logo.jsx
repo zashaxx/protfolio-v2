@@ -1,51 +1,33 @@
-import { useRef, useLayoutEffect } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 
 export default function Logo() {
   const pathRef = useRef(null);
-
-  const getRandomTiming = () => {
-    const modes = [
-      "ease",
-      "linear",
-      "ease-in-out",
-      "cubic-bezier(0.4, 0, 0.2, 1)",
-    ];
-    return modes[Math.floor(Math.random() * modes.length)];
-  };
-
-  const startAnimation = () => {
-    if (!pathRef.current) return;
-
-    const drawTime = Math.random() * 2 + 2;
-    const undrawTime = Math.random() * 2 + 2;
-
-    pathRef.current.style.animation = `
-      draw ${drawTime}s ${getRandomTiming()} forwards,
-      undraw ${undrawTime}s ${getRandomTiming()} ${drawTime + 1}s forwards
-    `;
-  };
+  const [animKey, setAnimKey] = useState(0);
 
   useLayoutEffect(() => {
-    startAnimation();
-    const node = pathRef.current;
-    node.addEventListener("animationend", startAnimation);
-    return () => node.removeEventListener("animationend", startAnimation);
-  }, []);
+    if (!pathRef.current) return;
+    const dur = (Math.random() * 3 + 4).toFixed(2);
+    const timing = ["ease", "linear", "ease-in-out", "cubic-bezier(0.4, 0, 0.2, 1)"][
+      Math.floor(Math.random() * 4)
+    ];
+    pathRef.current.style.animation = `draw-undraw ${dur}s ${timing} infinite`;
+  }, [animKey]);
+
+  const handleClick = () => setAnimKey((k) => k + 1);
 
   return (
     <svg
+      key={animKey}
       viewBox="0 0 200.00 171.24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      onClick={handleClick}
+      style={{ cursor: "pointer" }}
     >
       <style>{`
-        @keyframes draw {
-          from { stroke-dashoffset: 732.52; }
-          to { stroke-dashoffset: 0; }
-        }
-        @keyframes undraw {
-          from { stroke-dashoffset: 0; }
-          to { stroke-dashoffset: -732.52; }
+        @keyframes draw-undraw {
+          0%, 100% { stroke-dashoffset: 732.52; }
+          35%, 65% { stroke-dashoffset: 0; }
         }
         .logo-path {
           stroke: #172033;
@@ -53,6 +35,7 @@ export default function Logo() {
           stroke-linecap: round;
           stroke-linejoin: round;
           stroke-dasharray: 732.52;
+          stroke-dashoffset: 732.52;
         }
         .dark .logo-path { stroke: #f1f5fb; }
       `}</style>
