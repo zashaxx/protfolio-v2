@@ -662,7 +662,7 @@ function App() {
               </a>
               <a
                 className="button hero__contact-link"
-                href="/Aayush-Koirala_Resume.pdf"
+                href="/resume/aayush_koirala_resume.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
               >
