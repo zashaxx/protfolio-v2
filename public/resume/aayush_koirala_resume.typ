@@ -105,7 +105,7 @@
 #project(
   name: "Portfolio",
   technologies: ("React", "Vite", "CSS3", "JavaScript"),
-  repo-url: "https://github.com/zashaxx/protfolio-v2",
+  repo-url: github,
   live-url: "https://aayush-koirala.com.np",
   details: [
     - Personal portfolio website featuring dark/light theme, smooth scroll animations, and responsive layouts

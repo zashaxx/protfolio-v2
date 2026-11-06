@@ -1,21 +1,55 @@
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Download, MoonStar, SunMedium, X, Folder, ExternalLink, ChevronDown } from "lucide-react";
-import { FaGithub, FaInstagram, FaLinkedinIn, FaWhatsapp } from "react-icons/fa6";
-import Preloader from "./components/Preloader";
-import TechIcon from "./components/TechIcon";
-import Logo from "./components/Logo";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUpRight,
+  BookOpen,
+  Braces,
+  Code2,
+  FolderKanban,
+  Layers3,
+  Mail,
+  Menu,
+  Monitor,
+  Moon,
+  Play,
+  Rocket,
+  ShoppingBag,
+  Smartphone,
+  Sun,
+  UserRound,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
+import {
+  FaGithub,
+  FaInstagram,
+  FaLinkedinIn,
+  FaWhatsapp,
+} from "react-icons/fa6";
+import { SiClaude, SiGooglegemini, SiOpenai } from "react-icons/si";
+import BuildStack, { StackDetailPage } from "./components/BuildStack";
+import GitHubContributions from "./components/GitHubContributions";
+import PointerEffects from "./components/PointerEffects";
 import "./App.css";
 
 const navItems = [
-  { label: "About", href: "#about" },
-  { label: "Expertise", href: "#experience" },
-  { label: "Projects", href: "#projects" },
-  { label: "Contact", href: "#contact" },
+  { label: "Profile", href: "#about", icon: UserRound },
+  { label: "Expertise", href: "#expertise", icon: Braces },
+  { label: "Stack", href: "#stack", icon: Layers3 },
+  { label: "Work", href: "#projects", icon: FolderKanban },
+  { label: "Activity", href: "#github", icon: FaGithub },
+  { label: "Contact", href: "#contact", icon: Mail },
 ];
 
 const socialLinks = [
-  { label: "GitHub", href: "https://github.com/zashaxx", icon: FaGithub },
+  {
+    label: "GitHub",
+    href: "https://github.com/zashaxx",
+    icon: FaGithub,
+  },
   {
     label: "LinkedIn",
     href: "https://www.linkedin.com/in/aayushkoirala8848/",
@@ -26,44 +60,48 @@ const socialLinks = [
     href: "https://www.instagram.com/flawedaayush",
     icon: FaInstagram,
   },
+  {
+    label: "WhatsApp",
+    href: "https://wa.me/9779804014936",
+    icon: FaWhatsapp,
+  },
 ];
 
-const experiences = [
+const sidebarSocialLinks = socialLinks.slice(0, 2);
+
+const expertise = [
   {
-    company: "Full Stack Development",
-    title: "MERN Stack & Modern Web",
-    range: "Active Focus",
-    url: "https://github.com/zashaxx",
+    number: "01",
+    eyebrow: "Frontend",
+    title: "React interfaces",
+    status: "Current stack",
     duties: [
-      "Building end-to-end web applications using React, Node.js, Express, and MongoDB.",
-      "Developing responsive, accessible interfaces with modern CSS and JavaScript.",
-      "Exploring Next.js for server-side rendering and improved performance.",
-      "Integrating third-party services, payment gateways, and real-time features.",
+      "Build responsive interfaces with React, Next.js, JavaScript, and CSS.",
+      "Work from desktop layouts down to small mobile screens.",
+      "Keep components accessible and straightforward to maintain.",
     ],
   },
   {
-    company: "Python & Web Security",
-    title: "Certified Practitioner",
-    range: "Certification Earned",
-    url: "https://github.com/zashaxx",
-    certUrl: "/python_certificate_cs.pdf",
+    number: "02",
+    eyebrow: "Backend",
+    title: "APIs and data",
+    status: "Current stack",
     duties: [
-      "Earned a certification in Python for Web Security, covering secure coding practices and vulnerability mitigation.",
-      "Understanding common web vulnerabilities (XSS, CSRF, SQL Injection) and implementing proper defenses.",
-      "Applying security best practices across the full development lifecycle.",
-      "Exploring Python-based backend frameworks like FastAPI for API development.",
+      "Build APIs with Node.js, Express, FastAPI, and SQLAlchemy.",
+      "Use MongoDB and PostgreSQL for application data.",
+      "Integrate authentication, payments, and real-time features.",
     ],
   },
   {
-    company: "UI/UX & Frontend Craft",
-    title: "Design-Minded Developer",
-    range: "Ongoing",
-    url: "#",
+    number: "03",
+    eyebrow: "Security",
+    title: "Web security fundamentals",
+    status: "Certified",
+    certificate: "/python_certificate_cs.pdf",
     duties: [
-      "Crafting clean, intuitive user interfaces with attention to typography, spacing, and color theory.",
-      "Implementing responsive designs that work seamlessly across devices and screen sizes.",
-      "Focusing on performance optimization, accessibility (a11y), and smooth animations.",
-      "Translating design mockups and wireframes into functional, pixel-perfect components.",
+      "Completed a Python for Web Security certification.",
+      "Study common issues including XSS, CSRF, and SQL injection.",
+      "Apply input validation and secure defaults in project work.",
     ],
   },
 ];
@@ -71,977 +109,1268 @@ const experiences = [
 const projects = [
   {
     title: "MERCH Nepal",
-    subtitle: "Merchandise Selling Website",
-    text: "A full-stack e-commerce platform built using the MERN stack. Features include seller registration, customer interaction, administrative controls, payment integration, and real-time live chat functionality.",
+    subtitle: "Full-stack commerce platform",
+    description:
+      "A MERN e-commerce system with seller onboarding, administrative controls, Stripe payments, and real-time support chat.",
+    stack: ["React", "Node.js", "MongoDB", "Socket.io", "Stripe"],
     href: "https://github.com/zashaxx/Merch-Nepal",
-    stack: ["React", "Node.js", "Express", "MongoDB", "Socket.io", "Stripe"],
-    accent: "M",
+    icon: ShoppingBag,
   },
   {
     title: "GoodNotes",
-    subtitle: "Notes Downloading Website",
-    text: "A targeted resource educational portal website designed for Pokhara University students to easily access and download necessary notes and educational materials, improving study efficiency.",
+    subtitle: "University resource library",
+    description:
+      "A focused education portal that helps Pokhara University students find and download the notes they need without friction.",
+    stack: ["React", "Firebase", "Node.js", "Responsive UI"],
     href: "https://github.com/zashaxx/GoodNotesFinal",
-    stack: ["React", "Firebase", "Responsive UI", "Content Management"],
-    accent: "G",
-    align: "left",
+    icon: BookOpen,
   },
   {
     title: "Nep Tube",
-    subtitle: "Nepal Video Streaming Platform",
-    text: "A full-stack video streaming platform built with Next.js and tRPC, featuring Clerk authentication, AI-powered tools via Replicate, PostgreSQL with Drizzle ORM, and a dedicated video streaming server.",
+    subtitle: "Nepal video platform",
+    description:
+      "A full-stack streaming product with Clerk authentication, AI-assisted tools, PostgreSQL, tRPC, and dedicated video delivery.",
+    stack: ["Next.js", "TypeScript", "PostgreSQL", "tRPC", "AI"],
     href: "https://github.com/zashaxx/neptube",
-    stack: ["Next.js", "TypeScript", "PostgreSQL", "tRPC", "Clerk Auth", "AI Integration"],
-    accent: "N",
+    icon: Play,
   },
 ];
 
-const noteworthyProjects = [
+const otherProjects = [
   {
     title: "Chromatiq",
-    text: "An interactive colour guessing game built with Next.js where players test their colour perception by matching the correct shade. Features a clean, minimalist UI with real-time feedback.",
-    github: "https://github.com/zashaxx/chromatiq",
-    external: "https://chromatiq.vercel.app/",
-    tech: ["Next.js", "React", "CSS3", "Vercel"],
+    type: "Colour game",
+    description:
+      "A compact colour-perception game with immediate feedback and a deliberately simple interface.",
+    tech: ["Next.js", "React", "Vercel"],
+    source: "https://github.com/zashaxx/chromatiq",
+    live: "https://chromatiq.vercel.app/",
   },
   {
     title: "Cow & Bull",
-    text: "A classic code-breaking number guessing game built as a web application. Players take turns guessing each other's secret number with real-time feedback on each guess.",
-    github: "https://github.com/zashaxx/cowbull",
-    external: "https://cowbull-flame.vercel.app/",
-    tech: ["React", "JavaScript", "CSS3", "Vercel"],
+    type: "Logic game",
+    description:
+      "A browser-based take on the classic code-breaking game, built around quick rounds and clear feedback.",
+    tech: ["React", "JavaScript", "CSS"],
+    source: "https://github.com/zashaxx/cowbull",
+    live: "https://cowbull-flame.vercel.app/",
   },
   {
-    title: "Todo App (FastAPI + React)",
-    text: "A full-stack task management application featuring a FastAPI backend with SQLAlchemy and a React frontend. Demonstrates integration between Python-based APIs and modern JavaScript frameworks.",
-    github: "https://github.com/zashaxx/working_with_api/tree/master/fast-api",
-    external: "",
-    tech: ["FastAPI", "React", "Python", "SQLAlchemy", "REST API"],
+    title: "Todo API",
+    type: "Full-stack utility",
+    description:
+      "Task management with a FastAPI backend, SQLAlchemy persistence, and a React client.",
+    tech: ["FastAPI", "React", "SQLAlchemy"],
+    source: "https://github.com/zashaxx/working_with_api/tree/master/fast-api",
   },
   {
-    title: "Portfolio (React + Vite)",
-    text: "A personal portfolio website built with React and Vite, featuring a clean design system, dark/light theme support, smooth scroll animations, and fully responsive layouts.",
-    github: "https://github.com/zashaxx/protfolio-v2",
-    external: "https://aayush-koirala.com.np",
-    tech: ["React", "Vite", "CSS3", "JavaScript"],
+    title: "Portfolio",
+    type: "Personal website",
+    description:
+      "My portfolio built with React, Vite, responsive CSS, and light and dark themes.",
+    tech: ["React", "Vite", "CSS"],
+    source: "https://github.com/zashaxx",
+    live: "https://aayush-koirala.com.np",
   },
 ];
 
-const aboutSkills = [
-  {
-    title: "Frontend Development",
-    items: [
-      "HTML",
-      "CSS",
-      "JavaScript",
-      "React",
-      "Next.js",
-      "SASS/SCSS",
-    ],
-  },
-  {
-    title: "Backend, Security & Tools",
-    items: [
-      "Node.js",
-      "Express",
-      "Python",
-      "FastAPI",
-      "MongoDB",
-      "SQL",
-      "REST APIs",
-      "Git",
-      "Web Security",
-    ],
-  },
+const themeOptions = [
+  { value: "system", label: "Device", icon: Monitor },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "light", label: "Light", icon: Sun },
 ];
 
-function App() {
-  const preferredTheme = useMemo(() => {
-    if (typeof window === "undefined") {
-      return "light";
-    }
+function getInitialTheme() {
+  if (typeof window === "undefined") {
+    return "system";
+  }
 
-    const savedTheme = window.localStorage.getItem("theme");
+  const savedTheme = window.localStorage.getItem("theme");
+  return ["light", "dark", "system"].includes(savedTheme)
+    ? savedTheme
+    : "system";
+}
 
-    if (savedTheme === "light" || savedTheme === "dark") {
-      return savedTheme;
-    }
+function ThemePicker({ value, onChange, compact = false }) {
+  return (
+    <div
+      className={`theme-picker ${compact ? "theme-picker--compact" : ""}`}
+      aria-label="Choose appearance"
+      role="group"
+    >
+      {themeOptions.map((option) => {
+        const Icon = option.icon;
 
-    return "light";
-  }, []);
+        return (
+          <button
+            className={value === option.value ? "is-active" : ""}
+            key={option.value}
+            type="button"
+            onClick={(event) => onChange(option.value, event)}
+            aria-pressed={value === option.value}
+            title={`${option.label} theme`}
+          >
+            <Icon size={13} strokeWidth={1.7} aria-hidden="true" />
+            <span>{option.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-  const [theme, setTheme] = useState(preferredTheme);
-  const [showNav, setShowNav] = useState(false);
-  const [isAtTop, setIsAtTop] = useState(true);
-  const [showHero, setShowHero] = useState(false);
-  const [showFrame, setShowFrame] = useState(false);
-  const [isLoaderDone, setIsLoaderDone] = useState(false);
-  const [activeSection, setActiveSection] = useState("about");
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeTabId, setActiveTabId] = useState(0);
-  const [showAllNoteworthy, setShowAllNoteworthy] = useState(false);
-  const [isContactOpen, setIsContactOpen] = useState(false);
-  const noteworthyPrevCount = useRef(3);
-  const showMoreTimer = useRef(null);
+function SectionHeading({ number, label, title, description }) {
+  return (
+    <header className="section-heading" data-reveal>
+      <p className="section-heading__label">
+        <span>{number}</span>
+        <span aria-hidden="true">&mdash;</span>
+        {label}
+      </p>
+      <div className="section-heading__row">
+        <h2>{title}</h2>
+        {description && <p>{description}</p>}
+      </div>
+    </header>
+  );
+}
 
-
-
-  useLayoutEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.setAttribute("data-theme", theme);
-    window.localStorage.setItem("theme", theme);
-
-    const link = document.querySelector("link[rel='icon']");
-    if (link) {
-      link.href = theme === "dark" ? "/favicon-light.svg" : "/favicon.svg";
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-
-    window.scrollTo(0, 0);
-
-    return () => {
-      if ("scrollRestoration" in window.history) {
-        window.history.scrollRestoration = "auto";
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isLoaderDone) {
-      return undefined;
-    }
-
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    const updateNavVisibility = () => {
-      const currentScrollY = window.scrollY;
-      const scrollingUp = currentScrollY < lastScrollY;
-      const scrollingDown = currentScrollY > lastScrollY;
-
-      setIsAtTop(currentScrollY < 50);
-
-      if (scrollingDown) {
-        setShowNav(false);
-        setIsMobileMenuOpen(false);
-      } else if (scrollingUp) {
-        setShowNav(true);
-      }
-
-      lastScrollY = currentScrollY;
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (ticking) {
-        return;
-      }
-
-      ticking = true;
-      window.requestAnimationFrame(updateNavVisibility);
-    };
-
-    const navTimer = window.setTimeout(() => setShowNav(true), 0);
-    const heroTimer = window.setTimeout(() => setShowHero(true), 575);
-    const frameTimer = window.setTimeout(() => setShowFrame(true), 1325);
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      window.clearTimeout(navTimer);
-      window.clearTimeout(heroTimer);
-      window.clearTimeout(frameTimer);
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, [isLoaderDone]);
-
-  useEffect(() => {
-    const sections = Array.from(document.querySelectorAll("main section"));
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntry = entries.find((entry) => entry.isIntersecting);
-
-        if (visibleEntry?.target?.id) {
-          setActiveSection(visibleEntry.target.id);
-        }
-      },
-      {
-        rootMargin: "-45% 0px -45% 0px",
-        threshold: 0.2,
-      },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-
-    const revealObserver = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-revealed");
-            obs.unobserve(entry.target);
-
-            if (entry.target.classList.contains("reveal-group--noteworthy")) {
-              setTimeout(() => {
-                entry.target.classList.add("reveal-done");
-              }, 1050);
-            }
-          }
-        });
-      },
-      {
-        root: null,
-        rootMargin: "0px 0px -10% 0px",
-        threshold: 0.1,
-      },
-    );
-
-    const revealElements = document.querySelectorAll(".reveal-group");
-    revealElements.forEach((el) => revealObserver.observe(el));
-
-    const scrollRevealObserver = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            obs.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        root: null,
-        rootMargin: "0px 0px -8% 0px",
-        threshold: 0.1,
-      },
-    );
-
-    const scrollRevealElements = document.querySelectorAll(".scroll-reveal");
-    scrollRevealElements.forEach((el) => scrollRevealObserver.observe(el));
-
-    return () => {
-      observer.disconnect();
-      revealObserver.disconnect();
-      scrollRevealObserver.disconnect();
-    };
-  }, [isLoaderDone]);
-
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.classList.add("blur-active");
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.classList.remove("blur-active");
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.classList.remove("blur-active");
-      document.body.style.overflow = "";
-    };
-  }, [isMobileMenuOpen]);
-
-  useEffect(() => {
-    const grid = document.querySelector(".noteworthy-grid");
-    if (!grid) return;
-
-    const onMouseMove = (e) => {
-      for (const card of grid.children) {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty("--mouse-x", `${x}px`);
-        card.style.setProperty("--mouse-y", `${y}px`);
-      }
-    };
-
-    grid.addEventListener("mousemove", onMouseMove);
-    return () => grid.removeEventListener("mousemove", onMouseMove);
-  }, []);
-
-  const toggleTheme = (event) => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    const x = event.clientX;
-    const y = event.clientY;
-    const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-
-    const commitTheme = () => {
-      document.documentElement.classList.toggle("dark", nextTheme === "dark");
-      document.documentElement.setAttribute("data-theme", nextTheme);
-      setTheme(nextTheme);
-    };
-
-    const isAppearanceTransition =
-      typeof document.startViewTransition === "function" &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (!isAppearanceTransition) {
-      flushSync(commitTheme);
-      return;
-    }
-
-    document.documentElement.dataset.transitioning = "";
-
-    const transition = document.startViewTransition(() => {
-      flushSync(commitTheme);
-    });
-
-    transition.finished.finally(() => {
-      delete document.documentElement.dataset.transitioning;
-    });
-
-    transition.ready.then(() => {
-      const clipPath = [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`,
-      ];
-      document.documentElement.animate(
-        {
-          clipPath:
-            nextTheme === "dark"
-              ? [...clipPath].reverse()
-              : clipPath,
-        },
-        {
-          duration: 400,
-          easing: "ease-out",
-          fill: "forwards",
-          pseudoElement:
-            nextTheme === "dark"
-              ? "::view-transition-old(root)"
-              : "::view-transition-new(root)",
-        },
-      );
-    });
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen((currentValue) => !currentValue);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
-  // Smooth scroll handler for all links to support body scroll unlock
-  const handleNavClick = (e, href) => {
-    e.preventDefault();
-    setIsMobileMenuOpen(false);
-    const target = document.querySelector(href);
-    if (target) {
-      setTimeout(() => {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 320);
-    }
-  };
-
-  const INITIAL_NOTEWORTHY_COUNT = 3;
-  const displayedNoteworthy = showAllNoteworthy
-    ? noteworthyProjects
-    : noteworthyProjects.slice(0, INITIAL_NOTEWORTHY_COUNT);
-
-  const handleToggleNoteworthy = () => {
-    const wasShowingAll = showAllNoteworthy;
-    setShowAllNoteworthy((prev) => !prev);
-    noteworthyPrevCount.current = wasShowingAll
-      ? INITIAL_NOTEWORTHY_COUNT
-      : noteworthyProjects.length;
-  };
-
-  useLayoutEffect(() => {
-    const grid = document.querySelector(".noteworthy-grid");
-    if (!grid) return;
-
-    clearTimeout(showMoreTimer.current);
-
-    if (showAllNoteworthy) {
-      grid.classList.add("noteworthy-grid--revealed");
-      grid.classList.remove("noteworthy-grid--reveal-done");
-      showMoreTimer.current = setTimeout(() => {
-        grid.classList.remove("noteworthy-grid--revealed");
-        grid.classList.add("noteworthy-grid--reveal-done");
-      }, 800);
-    } else {
-      grid.classList.remove("noteworthy-grid--revealed", "noteworthy-grid--reveal-done");
-    }
-
-    return () => clearTimeout(showMoreTimer.current);
-  }, [showAllNoteworthy]);
+function ProjectFeatureCard({ project }) {
+  const ProjectIcon = project.icon;
 
   return (
-    <div className={`portfolio-page ${showFrame ? "is-frame-visible" : ""}`}>
-      <Preloader onHidden={() => setIsLoaderDone(true)} />
-
-      {/* Overlay for closing side drawer */}
-      <div
-        className={`mobile-menu-overlay ${isMobileMenuOpen ? "is-active" : ""}`}
-        onClick={closeMobileMenu}
-      />
-
-      <div className="portfolio-shell">
-        <header
-          className={`portfolio-nav ${showNav ? "is-visible" : ""} ${isAtTop ? "is-top-page" : "is-scrolled"} ${isMobileMenuOpen ? "is-menu-open" : ""}`}
-        >
-          <a
-            className="brand-mark"
-            href="#top"
-            aria-label="Home"
-            onClick={(e) => handleNavClick(e, "#top")}
+    <article className="featured-project-card">
+      <div className="featured-project-card__heading">
+        <span className="project-card__icon" aria-hidden="true">
+          <ProjectIcon size={24} strokeWidth={1.45} />
+        </span>
+        <div>
+          <ul
+            className="project-card__chips"
+            aria-label={`${project.title} technologies`}
           >
-            <Logo animate={showHero} />
-          </a>
-
-          <div className="nav-cluster">
-            <nav className="portfolio-nav__links" aria-label="Primary">
-              {navItems.map((item, index) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className={
-                    activeSection === item.href.slice(1) ? "is-active" : ""
-                  }
-                  style={{ "--nav-index": index }}
-                  onClick={(e) => handleNavClick(e, item.href)}
-                >
-                  <span>{String(index + 1).padStart(2, "0")}.</span>
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-
-            <div className="nav-actions">
-              <button
-                className="theme-button"
-                type="button"
-                onClick={toggleTheme}
-                aria-pressed={theme === "dark"}
-                aria-label={
-                  theme === "dark"
-                    ? "Switch to light mode"
-                    : "Switch to dark mode"
-                }
-              >
-                <span className="theme-button__icon" aria-hidden="true">
-                  {theme === "dark" ? (
-                    <SunMedium size={22} strokeWidth={2.5} />
-                  ) : (
-                    <MoonStar size={22} strokeWidth={2.5} />
-                  )}
-                </span>
-              </button>
-
-              <button
-                className={`menu-button ${isMobileMenuOpen ? "is-active" : ""}`}
-                type="button"
-                onClick={toggleMobileMenu}
-                aria-expanded={isMobileMenuOpen}
-                aria-controls="primary-navigation"
-                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-              >
-                <div className="hamburger">
-                  <div className="hamburger-box">
-                    <div className="hamburger-inner"></div>
-                  </div>
-                </div>
-                <span className="menu-close-icon" aria-hidden="true">
-                  <X size={20} />
-                </span>
-              </button>
-            </div>
-          </div>
-
-        </header>
-
-        {/* Drawer Sidebar Menu — outside header so position:fixed resolves to viewport */}
-        <div
-          className={`mobile-nav-panel ${isMobileMenuOpen ? "is-open" : ""}`}
-          id="primary-navigation"
-        >
-          <button
-            className="mobile-menu-close"
-            onClick={closeMobileMenu}
-            aria-label="Close menu"
-          >
-            <X size={26} />
-          </button>
-          <nav className="mobile-nav-links" aria-label="Mobile Primary">
-            {navItems.map((item, index) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className={
-                  activeSection === item.href.slice(1) ? "is-active" : ""
-                }
-                style={{ transitionDelay: `${index * 60}ms` }}
-                onClick={(e) => handleNavClick(e, item.href)}
-              >
-                <span>{String(index + 1).padStart(2, "0")}.</span>
-                {item.label}
-              </a>
+            {project.stack.slice(0, 3).map((technology) => (
+              <li key={technology}>{technology}</li>
             ))}
-          </nav>
+          </ul>
+          <h3>{project.title}</h3>
         </div>
+      </div>
+      <p className="featured-project-card__type">{project.subtitle}</p>
+      <p className="project-card__description">{project.description}</p>
+      <a
+        className="project-card__source"
+        href={project.href}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <FaGithub size={16} aria-hidden="true" />
+        View source
+        <ArrowUpRight size={15} strokeWidth={1.6} aria-hidden="true" />
+      </a>
+    </article>
+  );
+}
 
-        <aside
-          className={`side-rail side-rail--left ${showFrame ? "is-visible" : ""}`}
-          aria-label="Social links"
-        >
-          {socialLinks.map((link) => (
+function ProjectDeckCard({ project, slot, onActivate }) {
+  const ProjectIcon = project.icon;
+  const activate = () => onActivate();
+
+  return (
+    <article
+      className={`deck-card project-deck-card is-${slot}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`Show ${project.title}`}
+      onClick={activate}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activate();
+        }
+      }}
+    >
+      <ul
+        className="project-card__chips"
+        aria-label={`${project.title} technologies`}
+      >
+        {project.stack.slice(0, 3).map((technology) => (
+          <li key={technology}>{technology}</li>
+        ))}
+      </ul>
+      <div className="project-card__heading">
+        <span className="project-card__icon" aria-hidden="true">
+          <ProjectIcon size={22} strokeWidth={1.45} />
+        </span>
+        <div>
+          <p>{project.subtitle}</p>
+          <h3>{project.title}</h3>
+        </div>
+      </div>
+      <p className="project-card__description">{project.description}</p>
+      <a
+        className="project-card__source"
+        href={project.href}
+        target="_blank"
+        rel="noreferrer"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <FaGithub size={15} aria-hidden="true" />
+        View source
+        <ArrowUpRight size={14} strokeWidth={1.6} aria-hidden="true" />
+      </a>
+    </article>
+  );
+}
+
+function ProjectRows({ className = "", id }) {
+  return (
+    <div className={`other-projects ${className}`.trim()} id={id} data-reveal>
+      {otherProjects.map((project) => (
+        <article className="project-row" key={project.title}>
+          <h3>
             <a
-              key={link.label}
-              href={link.href}
-              aria-label={link.label}
+              href={project.live ?? project.source}
               target="_blank"
               rel="noreferrer"
             >
-              <span className="side-rail__icon" aria-hidden="true">
-                <link.icon size={24} />
-              </span>
+              {project.title}
             </a>
-          ))}
-          <span className="side-rail__line" />
-        </aside>
-
-        <aside
-          className={`side-rail side-rail--right ${showFrame ? "is-visible" : ""}`}
-          aria-label="Contact email"
-        >
-          <a
-            className="side-rail__email"
-            href="mailto:aayushkoirala8848@gmail.com"
-            aria-label="Email aayushkoirala8848@gmail.com"
-          >
-            <span className="side-rail__arrow" aria-hidden="true">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="18 15 12 9 6 15" />
-              </svg>
-            </span>
-            aayushkoirala8848@gmail.com
-          </a>
-          <span className="side-rail__line" />
-        </aside>
-
-        <main className="portfolio-content" id="top">
-          <section className={`hero ${showHero ? "is-visible" : ""}`} id="top">
-            <p className={`hero__eyebrow ${showHero ? "is-visible" : ""}`}>
-              Hi, my name is
-            </p>
-            <h1 className={`hero__title ${showHero ? "is-visible" : ""}`}>
-              Aayush Koirala.
-            </h1>
-            <h2 className={`hero__subtitle ${showHero ? "is-visible" : ""}`}>
-              I build clean digital experiences for the web.
-            </h2>
-            <p className={`hero__copy ${showHero ? "is-visible" : ""}`}>
-              I specialize in designing and building responsive web applications
-              with clean, intuitive interfaces. From portfolios to full-stack
-              platforms, I create digital experiences that are performant,
-              accessible, and visually refined.
-            </p>
-
-            <div className="hero__actions">
+          </h3>
+          <div className="project-row__details">
+            <p className="project-row__type">{project.type}</p>
+            <p>{project.description}</p>
+          </div>
+          <div className="project-row__links">
+            <a
+              href={project.source}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${project.title} source code`}
+            >
+              <FaGithub size={14} aria-hidden="true" />
+            </a>
+            {project.live && (
               <a
-                className="button"
-                href="#projects"
-                onClick={(e) => handleNavClick(e, "#projects")}
-              >
-                View Projects
-              </a>
-              <a
-                className="button hero__contact-link"
-                href="#contact"
-                onClick={(e) => handleNavClick(e, "#contact")}
-              >
-                Contact Me
-              </a>
-              <a
-                className="button hero__contact-link"
-                href="/resume/aayush_koirala_resume.pdf"
+                href={project.live}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="noreferrer"
+                aria-label={`${project.title} live site`}
               >
-                <Download size={18} style={{ marginRight: 8 }} />
-                Resume
+                <ArrowUpRight size={15} strokeWidth={1.6} aria-hidden="true" />
               </a>
-            </div>
-          </section>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
 
-          <section
-            className="about-section reveal-group reveal-group--about"
-            id="about"
-          >
-            <div className="section-heading section-heading--about">
-              <span>01.</span>
-              <h3>About Me</h3>
-              <span className="section-heading__line" aria-hidden="true" />
-            </div>
+function ProjectsDetailPage({ onBack }) {
+  return (
+    <section className="detail-page content-wrap" aria-labelledby="projects-page-title">
+      <a className="detail-page__back" href="/#projects" onClick={onBack}>
+        <ArrowLeft size={15} strokeWidth={1.7} aria-hidden="true" />
+        Back
+      </a>
+      <header className="detail-page__header" data-reveal>
+        <h1 id="projects-page-title">projects</h1>
+        <p>
+          Applications and platforms I have built across commerce, education,
+          video, APIs, and small product experiments.
+        </p>
+      </header>
+      <div className="featured-projects detail-featured-projects" data-reveal>
+        {projects.map((project) => (
+          <ProjectFeatureCard project={project} key={project.title} />
+        ))}
+      </div>
+      <ProjectRows className="detail-project-rows" />
+    </section>
+  );
+}
 
-            <div className="about-layout">
-              <div className="about-copy">
-                <article className="about-card about-card--bio">
-                  <p>
-                    I&apos;m <strong>Aayush Koirala</strong>, a Computer
-                    Engineering student at{" "}
-                    <strong>Nepal Engineering College</strong> with a strong
-                    focus on full-stack web development. I build scalable,
-                    user-centric applications using modern JavaScript ecosystems
-                    and continuously expand my expertise across the stack.
-                  </p>
-                  <p>
-                    My primary toolkit includes <strong>React</strong> for
-                    crafting dynamic frontends and{" "}
-                    <strong>Node.js/Express</strong> for building robust backend
-                    services. I work with both <strong>MongoDB</strong> and{" "}
-                    <strong>SQL</strong> databases to design efficient data
-                    architectures, and I hold a certification in{" "}
-                    <a className="cert-link" href="/python_certificate_cs.pdf" target="_blank" rel="noreferrer">
-                      Python for Web Security
-                    </a>, reflecting my
-                    commitment to writing secure, resilient code.
-                  </p>
-                  <p>
-                    Beyond development, I enjoy exploring UI/UX design
-                    principles and staying current with emerging web
-                    technologies. Away from the keyboard, you&apos;ll likely
-                    find me with a book, a film, or a controller in hand.
-                  </p>
-                </article>
-              </div>
+function getInitialView() {
+  if (typeof window === "undefined") {
+    return "home";
+  }
 
-              <div
-                className="portrait-swap"
-                aria-label="Portrait of Aayush Koirala"
-              >
-                <div className="portrait-swap__frame">
-                  <img
-                    className="portrait-swap__image portrait-swap__image--bw"
-                    src="/black_and_white.png"
-                    alt="Aayush Koirala black and white portrait"
-                  />
-                  <img
-                    className="portrait-swap__image portrait-swap__image--color"
-                    src="/colour.png"
-                    alt="Aayush Koirala color portrait"
-                  />
-                </div>
-              </div>
-            </div>
+  const view = new URLSearchParams(window.location.search).get("view");
+  return view === "projects" || view === "stack" ? view : "home";
+}
 
-            <div className="about-skills">
-              {aboutSkills.map((group) => (
-                <article
-                  className="about-card about-card--skills"
-                  key={group.title}
-                >
-                  <h4>{group.title}</h4>
-                  <ul className="skills-list">
-                    {group.items.map((skill) => (
-                      <li key={skill}><TechIcon name={skill} size={16} /></li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </section>
+function runInstantScroll(scroll) {
+  const root = document.documentElement;
+  const previousBehavior = root.style.getPropertyValue("scroll-behavior");
+  const previousPriority = root.style.getPropertyPriority("scroll-behavior");
+  root.style.setProperty("scroll-behavior", "auto", "important");
+  scroll();
+  window.requestAnimationFrame(() => {
+    scroll();
+    if (previousBehavior) {
+      root.style.setProperty(
+        "scroll-behavior",
+        previousBehavior,
+        previousPriority,
+      );
+    } else {
+      root.style.removeProperty("scroll-behavior");
+    }
+  });
+}
 
-          <section className="experience-section reveal-group" id="experience">
-            <div className="section-heading section-heading--experience scroll-reveal">
-              <span>02.</span>
-              <h3>What I'm Working On</h3>
-              <span className="section-heading__line" aria-hidden="true" />
-            </div>
+function jumpToTop() {
+  runInstantScroll(() => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+  });
+}
 
-            <div className="experience-layout scroll-reveal">
-              <div
-                className="tab-list"
-                role="tablist"
-                aria-label="Job tabs"
-                style={{ "--active-index": activeTabId }}
-              >
-                {experiences.map((exp, index) => (
-                  <button
-                    key={exp.company}
-                    className={`tab-button ${activeTabId === index ? "is-active" : ""}`}
-                    onClick={() => setActiveTabId(index)}
-                    role="tab"
-                    aria-selected={activeTabId === index}
-                    aria-controls={`panel-${index}`}
-                    id={`tab-${index}`}
-                  >
-                    <span>{exp.company}</span>
-                  </button>
-                ))}
-                <div className="tab-highlight" />
-              </div>
+function jumpToSection(target) {
+  runInstantScroll(() => {
+    target.scrollIntoView({ behavior: "auto", block: "start" });
+  });
+}
 
-              <div className="tab-panels">
-                {experiences.map((exp, index) => (
-                  <div
-                    key={exp.company}
-                    className={`tab-panel ${activeTabId === index ? "is-active" : ""}`}
-                    role="tabpanel"
-                    id={`panel-${index}`}
-                    aria-labelledby={`tab-${index}`}
-                    hidden={activeTabId !== index}
-                  >
-                    <h4>
-                      <span className="job-title">{exp.title}</span>
-                      <span className="job-company">
-                        &nbsp;@&nbsp;
-                        <a
-                          href={exp.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-link"
-                        >
-                          {exp.company}
-                        </a>
-                      </span>
-                    </h4>
-                    <p className="job-range">
-                      {exp.range}
-                      {exp.certUrl && (
-                        <a
-                          className="cert-badge"
-                          href={exp.certUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          title="View certificate"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                            <polyline points="15 3 21 3 21 9" />
-                            <line x1="10" y1="14" x2="21" y2="3" />
-                          </svg>
-                        </a>
-                      )}
-                    </p>
-                    <ul className="job-duties">
-                      {exp.duties.map((duty, i) => (
-                        <li key={i}>{duty}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+function App() {
+  const [themePreference, setThemePreference] = useState(getInitialTheme);
+  const [systemDark, setSystemDark] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : window.matchMedia("(prefers-color-scheme: dark)").matches,
+  );
+  const [activeSection, setActiveSection] = useState("about");
+  const [pageView, setPageView] = useState(getInitialView);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showAllProjects, setShowAllProjects] = useState(false);
+  const [deckSlots, setDeckSlots] = useState(["center", "left", "right"]);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
 
-          <section className="projects-section reveal-group" id="projects">
-            <div className="section-heading section-heading--projects scroll-reveal">
-              <span>03.</span>
-              <h3>Some Things I've Built</h3>
-              <span className="section-heading__line" aria-hidden="true" />
-            </div>
+    const savedSoundPreference = window.localStorage.getItem(
+      "site-sounds-enabled",
+    );
+    return savedSoundPreference === null || savedSoundPreference === "on";
+  });
+  const mobileMenuRef = useRef(null);
+  const previousFocusRef = useRef(null);
+  const themeTimerRef = useRef(null);
 
-            <div className="projects-stack">
-              {projects.map((project, index) => (
-                <article
-                  className={`project-showcase ${index % 2 === 1 ? "project-showcase--reverse" : ""} ${project.align === "left" ? "project-showcase--left" : ""} scroll-reveal`}
-                  key={project.title}
-                >
-                  <div className="project-showcase__media">
-                    <a
-                      className="project-image-link"
-                      href={project.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`Open ${project.title} on GitHub`}
-                      title={`Open ${project.title} on GitHub`}
-                    >
-                      <div className="project-image-card" aria-hidden="true">
-                        <div className="project-image-card__tint" />
-                        <div className="project-image-card__visual">
-                          <span>{project.accent}</span>
-                          <small>{project.title}</small>
-                        </div>
-                      </div>
-                    </a>
-                  </div>
+  const effectiveTheme =
+    themePreference === "system"
+      ? systemDark
+        ? "dark"
+        : "light"
+      : themePreference;
 
-                  <div className="project-showcase__details">
-                    <div className="project-title-row">
-                      <h4>{project.title}</h4>
-                    </div>
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (event) => {
+      if (
+        themePreference === "system" &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        const root = document.documentElement;
+        root.classList.add("theme-anim");
+        window.clearTimeout(themeTimerRef.current);
+        themeTimerRef.current = window.setTimeout(
+          () => root.classList.remove("theme-anim"),
+          520,
+        );
+      }
 
-                    <div className="project-description-card">
-                      <p>{project.text}</p>
-                    </div>
+      setSystemDark(event.matches);
+    };
 
-                    <div className="project-stack">
-                      {project.stack.map((tech) => (
-                        <TechIcon key={tech} name={tech} size={18} collapsed />
-                      ))}
-                    </div>
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, [themePreference]);
 
-                    <div className="project-links">
-                      <a
-                        href={project.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="GitHub"
-                      >
-                        <FaGithub size={24} />
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
+  useEffect(() => {
+    document.documentElement.dataset.theme = effectiveTheme;
+    document.documentElement.classList.toggle("dark", effectiveTheme === "dark");
+    window.localStorage.setItem("theme", themePreference);
 
-          {/* New Noteworthy Projects Section */}
-          <section className="noteworthy-section reveal-group reveal-group--noteworthy" id="noteworthy">
-            <div className="section-heading section-heading--projects noteworthy-heading scroll-reveal">
-              <span>04.</span>
-              <h3>Other Noteworthy Projects</h3>
-              <span className="section-heading__line" aria-hidden="true" />
-            </div>
+    const favicon = document.querySelector("link[rel='icon']");
+    if (favicon) {
+      favicon.href =
+        effectiveTheme === "dark" ? "/favicon-light.svg" : "/favicon.svg";
+    }
+  }, [effectiveTheme, themePreference]);
 
-            <div className="noteworthy-grid">
-              {displayedNoteworthy.map((proj, i) => {
-                const isRevealed = showAllNoteworthy && i >= INITIAL_NOTEWORTHY_COUNT;
-                const staggerIndex = isRevealed ? i - INITIAL_NOTEWORTHY_COUNT : 0;
-                return (
-                  <article
-                    className={`noteworthy-card ${isRevealed ? "noteworthy-card--reveal" : ""}`}
-                    key={proj.title}
-                    onClick={() => window.open(proj.external || proj.github, "_blank", "noopener,noreferrer")}
-                    style={
-                      isRevealed
-                        ? { transitionDelay: `${staggerIndex * 100}ms` }
-                        : undefined
-                    }
-                  >
-                    <div className="card-top">
-                      <Folder className="folder-icon" size={36} />
-                      <div className="card-links">
-                        <a
-                          href={proj.github}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label="GitHub"
-                        >
-                          <FaGithub size={20} />
-                        </a>
-                        {proj.external && proj.external !== "#" && (
-                          <a
-                            href={proj.external}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label="External Link"
-                          >
-                            <ExternalLink size={20} />
-                          </a>
-                        )}
-                      </div>
-                    </div>
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      document.documentElement.dataset.themeReady = "";
+    });
 
-                    <h4 className="card-title">{proj.title}</h4>
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
 
-                    <p className="card-description">{proj.text}</p>
+  useEffect(() => {
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}`,
+    );
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
-                    <ul className="card-tech">
-                      {proj.tech.map((t) => (
-                        <li key={t}><TechIcon name={t} size={14} collapsed /></li>
-                      ))}
-                    </ul>
-                  </article>
-                );
-              })}
-            </div>
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, []);
 
-            <button
-              className="button noteworthy-toggle-btn"
-              onClick={handleToggleNoteworthy}
-            >
-              Show {showAllNoteworthy ? "Less" : "More"}
-              <ChevronDown
-                size={18}
-                style={{
-                  marginLeft: 6,
-                  transform: showAllNoteworthy ? "rotate(180deg)" : "none",
-                  transition: "transform 0.25s ease",
-                }}
-              />
-            </button>
-          </section>
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextView = getInitialView();
+      setPageView(nextView);
 
-          <section className="contact-section reveal-group" id="contact">
-            <div className="section-heading scroll-reveal">
-              <span>04.</span>
-              <h3>Get In Touch</h3>
-              <span className="section-heading__line" aria-hidden="true" />
-            </div>
+      window.requestAnimationFrame(() => {
+        if (nextView === "home" && window.location.hash) {
+          document.querySelector(window.location.hash)?.scrollIntoView();
+          return;
+        }
+        jumpToTop();
+      });
+    };
 
-            <p
-              className="contact-copy scroll-reveal"
-              style={{
-                textAlign: "center",
-                maxWidth: "600px",
-                margin: "0 auto",
-                fontSize: "1.1rem",
-              }}
-            >
-              I am currently looking for new opportunities and my inbox is
-              always open. Whether you have a question or just want to say hi,
-              I’ll try my best to get back to you!
-            </p>
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
-            <button
-              className="button"
-              onClick={() => setIsContactOpen(true)}
-              style={{ margin: "30px auto 0", display: "inline-flex", cursor: "pointer" }}
-            >
-              Say Hello
-            </button>
-          </section>
-        </main>
+  useEffect(() => {
+    if (pageView !== "home") {
+      return undefined;
+    }
+
+    let frameId = 0;
+
+    const updateActiveSection = () => {
+      frameId = 0;
+      const marker =
+        window.scrollY + Math.min(120, window.innerHeight * 0.15);
+      let currentSection = navItems[0].href.slice(1);
+
+      navItems.forEach((item) => {
+        const section = document.querySelector(item.href);
+        const sectionTop = section
+          ? section.getBoundingClientRect().top + window.scrollY
+          : Number.POSITIVE_INFINITY;
+        if (sectionTop <= marker) {
+          currentSection = section.id;
+        }
+      });
+
+      if (
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 4
+      ) {
+        currentSection = navItems.at(-1).href.slice(1);
+      }
+
+      setActiveSection(currentSection);
+    };
+
+    const requestUpdate = () => {
+      if (!frameId) {
+        frameId = window.requestAnimationFrame(updateActiveSection);
+      }
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+    };
+  }, [pageView]);
+
+  useEffect(() => {
+    const revealItems = document.querySelectorAll("[data-reveal]");
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduceMotion) {
+      revealItems.forEach((item) => item.classList.add("is-visible"));
+      return undefined;
+    }
+
+    const groupCounts = new Map();
+    revealItems.forEach((item) => {
+      const group = item.closest("[data-section], .detail-page, .site-footer");
+      const count = groupCounts.get(group) ?? 0;
+      item.style.setProperty("--reveal-delay", `${Math.min(count, 4) * 80}ms`);
+      groupCounts.set(group, count + 1);
+    });
+
+    const observer = new IntersectionObserver(
+      (entries, currentObserver) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            currentObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0 },
+    );
+
+    revealItems.forEach((item) => observer.observe(item));
+    return () => observer.disconnect();
+  }, [pageView, showAllProjects]);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return undefined;
+    }
+
+    const panel = mobileMenuRef.current;
+    previousFocusRef.current = document.activeElement;
+    document.body.style.overflow = "hidden";
+
+    const focusable = panel?.querySelectorAll(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+    focusable?.[0]?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || !focusable?.length) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      "site-sounds-enabled",
+      soundEnabled ? "on" : "off",
+    );
+  }, [soundEnabled]);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(themeTimerRef.current);
+    },
+    [],
+  );
+
+  const changeTheme = (nextPreference, event) => {
+    if (nextPreference === themePreference) {
+      return;
+    }
+
+    const nextEffectiveTheme =
+      nextPreference === "system"
+        ? systemDark
+          ? "dark"
+          : "light"
+        : nextPreference;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const root = document.documentElement;
+
+    if (
+      reduceMotion ||
+      typeof document.startViewTransition !== "function" ||
+      nextEffectiveTheme === effectiveTheme
+    ) {
+      root.classList.add("theme-anim");
+      setThemePreference(nextPreference);
+      window.clearTimeout(themeTimerRef.current);
+      themeTimerRef.current = window.setTimeout(
+        () => root.classList.remove("theme-anim"),
+        520,
+      );
+      return;
+    }
+
+    const x = event?.clientX ?? window.innerWidth / 2;
+    const y = event?.clientY ?? window.innerHeight / 2;
+    const radius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    );
+
+    root.classList.add("theme-view-transition");
+    const transition = document.startViewTransition(() => {
+      flushSync(() => setThemePreference(nextPreference));
+      root.dataset.theme = nextEffectiveTheme;
+      root.classList.toggle("dark", nextEffectiveTheme === "dark");
+    });
+
+    transition.ready
+      .then(() => {
+        root.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${radius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 540,
+            easing: "cubic-bezier(.32,.08,.24,1)",
+            pseudoElement: "::view-transition-new(root)",
+          },
+        );
+      })
+      .catch(() => {});
+
+    void transition.finished
+      .catch(() => {})
+      .finally(() => root.classList.remove("theme-view-transition"));
+  };
+
+  const cycleTheme = (event) => {
+    const currentIndex = themeOptions.findIndex(
+      (option) => option.value === themePreference,
+    );
+    const nextIndex = (currentIndex + 1) % themeOptions.length;
+    changeTheme(themeOptions[nextIndex].value, event);
+  };
+
+  const openDetailPage = (view, event) => {
+    event?.preventDefault();
+    setMenuOpen(false);
+    document.body.style.overflow = "";
+    window.history.pushState(null, "", `/?view=${view}`);
+    flushSync(() => setPageView(view));
+    jumpToTop();
+  };
+
+  const activateDeckCard = (projectIndex) => {
+    setDeckSlots((currentSlots) => {
+      const currentCenter = currentSlots.indexOf("center");
+      if (currentCenter === projectIndex) {
+        return currentSlots;
+      }
+
+      const nextSlots = [...currentSlots];
+      nextSlots[currentCenter] = currentSlots[projectIndex];
+      nextSlots[projectIndex] = "center";
+      return nextSlots;
+    });
+  };
+
+  const handleNavClick = (event, href) => {
+    event.preventDefault();
+    setMenuOpen(false);
+    document.body.style.overflow = "";
+
+    if (pageView !== "home") {
+      window.history.pushState(null, "", `/${href}`);
+      flushSync(() => setPageView("home"));
+    }
+
+    const target = document.querySelector(href);
+    if (!target) {
+      return;
+    }
+
+    setActiveSection(href === "#home" ? "about" : href.slice(1));
+
+    if (pageView === "home" && window.location.hash !== href) {
+      window.history.pushState(null, "", href);
+    }
+
+    jumpToSection(target);
+  };
+
+  const QuickThemeIcon =
+    themeOptions.find((option) => option.value === themePreference)?.icon ??
+    Monitor;
+
+  const currentNavSection =
+    pageView === "projects"
+      ? "projects"
+      : pageView === "stack"
+        ? "stack"
+        : activeSection;
+
+  return (
+    <div className="portfolio-page">
+      <PointerEffects soundEnabled={soundEnabled} />
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+
+      <div className="page-texture" aria-hidden="true">
+        <span className="halftone page-texture__top" />
+        <span className="halftone page-texture__bottom" />
       </div>
 
-      {isContactOpen && (
-        <div className="contact-overlay" onClick={() => setIsContactOpen(false)}>
-          <div className="contact-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="contact-modal__close"
-              onClick={() => setIsContactOpen(false)}
-              aria-label="Close"
-            >
-              <X size={22} />
-            </button>
-            <h3>Get in Touch</h3>
-            <div className="contact-modal__options">
+      <aside className="desktop-sidebar">
+        <a
+          className="brand"
+          href={pageView === "home" ? "#home" : "/"}
+          aria-label="Aayush Koirala, home"
+          onClick={(event) => handleNavClick(event, "#home")}
+        >
+          <span className="brand__name">Aayush Koirala</span>
+        </a>
+
+        <nav className="sidebar-nav" aria-label="Primary navigation">
+          {navItems.map((item) => {
+            const section = item.href.slice(1);
+            const isActive = currentNavSection === section;
+            const NavIcon = item.icon;
+
+            return (
               <a
-                className="contact-modal__option"
+                href={pageView === "home" ? item.href : `/${item.href}`}
+                key={item.href}
+                className={isActive ? "is-active" : ""}
+                aria-current={isActive ? "location" : undefined}
+                onClick={(event) => handleNavClick(event, item.href)}
+              >
+                <span className="sidebar-nav__arrow" aria-hidden="true">
+                  &rarr;
+                </span>
+                <NavIcon
+                  className="sidebar-nav__icon"
+                  size={14}
+                  strokeWidth={1.6}
+                  aria-hidden="true"
+                />
+                <span className="sidebar-nav__label">{item.label}</span>
+              </a>
+            );
+          })}
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="sidebar-socials" aria-label="Social links">
+            {sidebarSocialLinks.map((link) => (
+              <a
+                href={link.href}
+                key={link.label}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={link.label}
+              >
+                <link.icon size={15} strokeWidth={1.6} aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+          <div className="sidebar-controls">
+            <ThemePicker
+              value={themePreference}
+              onChange={changeTheme}
+              compact
+            />
+            <button
+              className="sound-toggle"
+              type="button"
+              onClick={() => setSoundEnabled((current) => !current)}
+              aria-pressed={soundEnabled}
+              aria-label={soundEnabled ? "Disable interface sounds" : "Enable interface sounds"}
+              title={soundEnabled ? "Sounds on" : "Sounds off"}
+            >
+              {soundEnabled ? (
+                <Volume2 size={16} strokeWidth={1.7} aria-hidden="true" />
+              ) : (
+                <VolumeX size={16} strokeWidth={1.7} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          <p className="sidebar-bottom__copy">
+            For work, collaborations, or anything else, reach me at
+          </p>
+          <a
+            className="sidebar-bottom__email"
+            href="mailto:aayushkoirala8848@gmail.com"
+          >
+            <Mail size={13} strokeWidth={1.6} aria-hidden="true" />
+            Email me
+          </a>
+        </div>
+      </aside>
+
+      <header className="mobile-header">
+        <a
+          className="mobile-brand"
+          href={pageView === "home" ? "#home" : "/"}
+          aria-label="Aayush Koirala, home"
+          onClick={(event) => handleNavClick(event, "#home")}
+        >
+          Aayush Koirala
+        </a>
+        <div className="mobile-header__actions">
+          <button
+            type="button"
+            className="icon-button"
+            onClick={cycleTheme}
+            aria-label={`Current theme: ${themePreference}. Change theme`}
+          >
+            <QuickThemeIcon size={17} strokeWidth={1.7} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => setMenuOpen(true)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label="Open navigation"
+          >
+            <Menu size={19} strokeWidth={1.7} aria-hidden="true" />
+          </button>
+        </div>
+      </header>
+
+      <div
+        className={`mobile-menu ${menuOpen ? "is-open" : ""}`}
+        id="mobile-menu"
+        ref={mobileMenuRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        aria-hidden={!menuOpen}
+      >
+        <div className="mobile-menu__top">
+          <span>Navigation / Index</span>
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close navigation"
+          >
+            <X size={19} strokeWidth={1.7} aria-hidden="true" />
+          </button>
+        </div>
+        <nav className="mobile-menu__nav" aria-label="Mobile navigation">
+          {navItems.map((item, index) => {
+            const isActive = currentNavSection === item.href.slice(1);
+            const NavIcon = item.icon;
+
+            return (
+              <a
+                href={pageView === "home" ? item.href : `/${item.href}`}
+                key={item.href}
+                className={isActive ? "is-active" : ""}
+                aria-current={isActive ? "location" : undefined}
+                onClick={(event) => handleNavClick(event, item.href)}
+                style={{ "--menu-index": index }}
+              >
+                <NavIcon
+                  className="mobile-menu__icon"
+                  size={17}
+                  strokeWidth={1.55}
+                  aria-hidden="true"
+                />
+                <span className="mobile-menu__label">{item.label}</span>
+                <ArrowDown
+                  className="mobile-menu__arrow"
+                  size={18}
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </a>
+            );
+          })}
+        </nav>
+        <div className="mobile-menu__bottom">
+          <p>Appearance</p>
+          <div className="mobile-menu__controls">
+            <ThemePicker
+              value={themePreference}
+              onChange={changeTheme}
+            />
+            <button
+              className="sound-toggle"
+              type="button"
+              onClick={() => setSoundEnabled((current) => !current)}
+              aria-pressed={soundEnabled}
+              aria-label={soundEnabled ? "Disable interface sounds" : "Enable interface sounds"}
+            >
+              {soundEnabled ? (
+                <Volume2 size={16} strokeWidth={1.7} aria-hidden="true" />
+              ) : (
+                <VolumeX size={16} strokeWidth={1.7} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          <div className="mobile-menu__socials">
+            {socialLinks.map((link) => (
+              <a
+                href={link.href}
+                key={link.label}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {link.label}
+                <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <main id="main-content">
+        {pageView === "projects" ? (
+          <ProjectsDetailPage
+            onBack={(event) => handleNavClick(event, "#projects")}
+          />
+        ) : pageView === "stack" ? (
+          <StackDetailPage onBack={(event) => handleNavClick(event, "#stack")} />
+        ) : (
+          <>
+        <section className="hero content-wrap" id="home" data-section>
+          <div className="hero-profile">
+            <figure className="hero-portrait hero-entrance">
+              <span className="hero-portrait__media">
+                <img
+                  src="/black_and_white.png"
+                  alt="Aayush Koirala"
+                  className="hero-portrait__image hero-portrait__image--bw"
+                />
+                <img
+                  src="/colour.png"
+                  alt=""
+                  aria-hidden="true"
+                  className="hero-portrait__image hero-portrait__image--color"
+                />
+              </span>
+            </figure>
+
+            <div className="hero-summary">
+              <h1 className="hero-entrance">Aayush Koirala</h1>
+              <p className="hero-entrance intro-copy">
+                I&apos;m a{" "}
+                <span className="intro-tag">
+                  <Code2 aria-hidden="true" />
+                  full-stack
+                </span>{" "}
+                engineer currently focused on{" "}
+                <span className="intro-tag">
+                  <Braces aria-hidden="true" />
+                  backend systems
+                </span>{" "}
+                and{" "}
+                <span className="intro-ai">
+                  <span className="intro-logos" aria-hidden="true">
+                    <span className="intro-logo">
+                      <SiGooglegemini />
+                    </span>
+                    <span className="intro-logo">
+                      <SiOpenai />
+                    </span>
+                    <span className="intro-logo">
+                      <SiClaude />
+                    </span>
+                  </span>
+                  generative AI
+                </span>. I build reliable{" "}
+                <span className="intro-tag">
+                  <Monitor aria-hidden="true" />
+                  web
+                </span>{" "}
+                &amp;{" "}
+                <span className="intro-tag">
+                  <Smartphone aria-hidden="true" />
+                  mobile apps
+                </span>{" "}
+                for real-world use.
+              </p>
+              <p className="hero-entrance intro-copy">
+                I&apos;m seeking an internship and opportunities to contribute to
+                ambitious{" "}
+                <span className="intro-tag">
+                  <Rocket aria-hidden="true" />
+                  startup teams
+                </span>, turn early ideas into dependable software, and grow through
+                meaningful production work.
+              </p>
+              <div className="hero-socials hero-entrance">
+                {socialLinks.map((link) => (
+                  <a
+                    className={`hero-social hero-social--${link.label.toLowerCase()}`}
+                    href={link.href}
+                    key={link.label}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {link.label.toLowerCase()} <span aria-hidden="true">{"\u2197"}</span>
+                  </a>
+                ))}
+                <a
+                  href="/resume/aayush_koirala_resume.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  resume <span aria-hidden="true">{"\u2197"}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <dl className="hero-meta hero-entrance">
+            <div>
+              <dt>Location</dt>
+              <dd>Bhaktapur, Nepal</dd>
+            </div>
+            <div>
+              <dt>Education</dt>
+              <dd>Computer Engineering</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>Open to internships</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="content-section content-wrap" id="about" data-section>
+          <SectionHeading
+            number="01"
+            label="profile"
+            title="Background"
+          />
+
+          <div className="about-grid">
+            <article className="about-copy" data-reveal>
+              <p>
+                I started with frontend projects and moved into backend development
+                as the applications became more complex. I now work across React
+                interfaces, APIs, authentication, databases, and deployment.
+              </p>
+              <p>
+                I use Node.js and Express for most backend work, with MongoDB or
+                PostgreSQL for data. I also completed a certification in{" "}
+                <a href="/python_certificate_cs.pdf" target="_blank" rel="noreferrer">
+                  Python for Web Security
+                </a>.
+              </p>
+              <p>
+                Away from code, I am usually reading, watching a film, exploring
+                interface design, or playing a game.
+              </p>
+            </article>
+          </div>
+
+          <dl className="profile-facts" data-reveal>
+            <div>
+              <dt>Education</dt>
+              <dd>B.E. Computer Engineering</dd>
+            </div>
+            <div>
+              <dt>Interests</dt>
+              <dd>Systems, interfaces, security</dd>
+            </div>
+            <div>
+              <dt>Working style</dt>
+              <dd>Build, test, improve</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section
+          className="content-section content-wrap"
+          id="expertise"
+          data-section
+        >
+          <SectionHeading
+            number="02"
+            label="expertise"
+            title="What I work with"
+            description="Frontend, backend, and web security."
+          />
+
+          <div className="expertise-list">
+            {expertise.map((item) => (
+              <article className="expertise-item" key={item.number} data-reveal>
+                <div className="expertise-item__index">{item.number}</div>
+                <div className="expertise-item__title">
+                  <p>{item.eyebrow}</p>
+                  <h3>{item.title}</h3>
+                  <span>{item.status}</span>
+                </div>
+                <ul>
+                  {item.duties.map((duty) => (
+                    <li key={duty}>{duty}</li>
+                  ))}
+                  {item.certificate && (
+                    <li>
+                      <a
+                        className="inline-arrow-link"
+                        href={item.certificate}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View certificate
+                        <ArrowUpRight
+                          size={12}
+                          strokeWidth={1.7}
+                          aria-hidden="true"
+                        />
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <BuildStack onViewAll={openDetailPage} />
+
+        <section
+          className="content-section content-wrap"
+          id="projects"
+          data-section
+        >
+          <div className="projects-desktop-preview">
+            <div className="preview-heading" data-reveal>
+              <h2>04 &mdash; projects</h2>
+              <a
+                href="/?view=projects"
+                onClick={(event) => openDetailPage("projects", event)}
+              >
+                all projects &rarr;
+              </a>
+            </div>
+            <div className="project-deck" data-reveal>
+              {projects.map((project, index) => (
+                <ProjectDeckCard
+                  project={project}
+                  slot={deckSlots[index]}
+                  onActivate={() => activateDeckCard(index)}
+                  key={project.title}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="projects-mobile-layout">
+            <SectionHeading
+              number="04"
+              label="selected work"
+              title="Projects"
+              description="Selected applications and platforms I have built."
+            />
+
+            <div className="featured-projects" data-reveal>
+              {projects.map((project) => (
+                <ProjectFeatureCard project={project} key={project.title} />
+              ))}
+            </div>
+
+            <button
+              className="view-all-projects"
+              type="button"
+              onClick={() => setShowAllProjects((current) => !current)}
+              aria-expanded={showAllProjects}
+              aria-controls="more-projects"
+            >
+              {showAllProjects ? "Show fewer projects" : "View all projects"}
+              <ArrowDown
+                size={17}
+                strokeWidth={1.6}
+                aria-hidden="true"
+                className={showAllProjects ? "is-open" : ""}
+              />
+            </button>
+
+            {showAllProjects && (
+              <ProjectRows className="is-open" id="more-projects" />
+            )}
+          </div>
+        </section>
+
+        <GitHubContributions />
+
+        <section
+          className="content-section content-wrap"
+          id="contact"
+          data-section
+        >
+          <SectionHeading
+            number="06"
+            label="contact"
+            title="Get in touch"
+            description="Email or WhatsApp works best."
+          />
+
+          <div className="contact-card" data-reveal>
+            <p>
+              I am currently open to internships, junior roles, and freelance web
+              projects.
+            </p>
+            <a className="contact-card__email" href="mailto:aayushkoirala8848@gmail.com">
+              <Mail size={16} strokeWidth={1.7} aria-hidden="true" />
+              aayushkoirala8848@gmail.com
+              <ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
+            </a>
+            <div className="contact-card__links">
+              <a
                 href="https://wa.me/9779804014936"
                 target="_blank"
                 rel="noreferrer"
-                style={{"--accent": "#25D366", "--accent-soft": "rgba(37, 211, 102, 0.1)"}}
               >
-                <FaWhatsapp size={28} />
-                <span>WhatsApp</span>
+                <FaWhatsapp size={14} aria-hidden="true" />
+                WhatsApp
               </a>
               <a
-                className="contact-modal__option"
-                href="mailto:aayushkoirala8848@gmail.com"
-                style={{"--accent": "#64b5f6", "--accent-soft": "rgba(100, 181, 246, 0.1)"}}
+                href="https://www.linkedin.com/in/aayushkoirala8848/"
+                target="_blank"
+                rel="noreferrer"
               >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="M22 4L12 13 2 4" />
-                </svg>
-                <span>Email</span>
+                <FaLinkedinIn size={13} aria-hidden="true" />
+                LinkedIn
               </a>
             </div>
           </div>
-        </div>
-      )}
+        </section>
+
+          </>
+        )}
+
+        <footer className="site-footer content-wrap">
+          <p>&copy; 2026 Aayush Koirala</p>
+          <a
+            href={pageView === "home" ? "#home" : "/"}
+            onClick={(event) => handleNavClick(event, "#home")}
+          >
+            {pageView === "home" ? "Back to top" : "Back home"}
+            <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden="true" />
+          </a>
+        </footer>
+      </main>
     </div>
   );
 }

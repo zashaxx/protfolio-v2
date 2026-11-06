@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { FaGithub, FaGitlab } from 'react-icons/fa6';
 import {
   SiReact,
   SiNodedotjs,
@@ -24,6 +23,8 @@ import {
   SiVite,
   SiDocker,
   SiGit,
+  SiGithub,
+  SiGitlab,
 } from 'react-icons/si';
 
 const iconMap = {
@@ -52,45 +53,14 @@ const iconMap = {
   'Vite': SiVite,
   'Docker': SiDocker,
   'Git': SiGit,
-  'GitHub': FaGithub,
-  'GitLab': FaGitlab,
-};
-
-const brandColors = {
-  'HTML': '#E34F26',
-  'React': '#61DAFB',
-  'Node.js': '#339933',
-  'Express': '#000000',
-  'MongoDB': '#47A248',
-  'Socket.io': '#010101',
-  'Stripe': '#008CDD',
-  'Firebase': '#FFCA28',
-  'Next.js': '#000000',
-  'TypeScript': '#3178C6',
-  'PostgreSQL': '#4169E1',
-  'tRPC': '#2596BE',
-  'Clerk Auth': '#6C47FF',
-  'Clerk': '#6C47FF',
-  'AI Integration': '#412991',
-  'CSS3': '#1572B6',
-  'CSS': '#1572B6',
-  'JavaScript': '#F7DF1E',
-  'Vercel': '#000000',
-  'FastAPI': '#009688',
-  'Python': '#3776AB',
-  'SQLAlchemy': '#D71F00',
-  'Vite': '#646CFF',
-  'Docker': '#2496ED',
-  'Git': '#F05032',
-  'GitHub': '#181717',
-  'GitLab': '#FC6D26',
+  'GitHub': SiGithub,
+  'GitLab': SiGitlab,
 };
 
 export default function TechIcon({ name, size = 16, collapsed = false }) {
   const [open, setOpen] = useState(false);
   const selfRef = useRef(null);
   const Icon = iconMap[name];
-  const brandColor = brandColors[name];
 
   const toggle = useCallback(() => {
     if (!collapsed) return;
@@ -124,7 +94,6 @@ export default function TechIcon({ name, size = 16, collapsed = false }) {
     <span
       ref={selfRef}
       className={`tech-icon ${collapsed ? 'tech-icon--collapsed' : ''} ${open ? 'is-open' : ''}`}
-      style={brandColor ? { '--brand': brandColor } : undefined}
       onClick={(e) => { e.stopPropagation(); toggle(); }}
       role={collapsed ? 'button' : undefined}
       tabIndex={collapsed ? 0 : undefined}

@@ -4,7 +4,39 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>aayush-koirala-protfolio</title>
+    <meta
+      name="description"
+      content="Aayush Koirala is a full-stack developer and Computer Engineering student building clear, dependable web products."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@300..700&family=Space+Grotesk:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        history.scrollRestoration = "manual";
+        if (location.hash) {
+          history.replaceState(null, "", location.pathname + location.search);
+        }
+        scrollTo(0, 0);
+        addEventListener("load", () => scrollTo(0, 0), { once: true });
+      } catch {}
+    </script>
+    <script>
+      try {
+        const preference = localStorage.getItem("theme") || "system";
+        const isDark =
+          preference === "dark" ||
+          (preference === "system" &&
+            matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = isDark ? "dark" : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
+    <title>Aayush Koirala | Full-stack developer</title>
   </head>
   <body>
     <div id="root"></div>
