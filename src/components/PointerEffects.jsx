@@ -20,32 +20,165 @@ export default function PointerEffects({ soundEnabled = false }) {
     let frameId = 0;
     let pointerX = 0;
     let pointerY = 0;
+    let pointerActive = false;
+    let refreshUntil = 0;
+    let currentColor = "";
+    const page = document.querySelector(".portfolio-page");
+    const frame = document.querySelector(".page-frame");
+    const sidebar = document.querySelector(".desktop-sidebar");
+    const colors = new Map();
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const paint = canvas.getContext("2d", { willReadFrequently: true });
+    const hasPopover = typeof cursor.showPopover === "function";
+
+    if (!hasPopover) cursor.removeAttribute("popover");
+
+    const parseColor = (value) => {
+      if (colors.has(value)) return colors.get(value);
+      if (!paint) return [255, 255, 255, 1];
+      paint.clearRect(0, 0, 1, 1);
+      paint.fillStyle = value;
+      paint.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = paint.getImageData(0, 0, 1, 1).data;
+      const color = [r, g, b, a / 255];
+      if (colors.size >= 256) colors.clear();
+      colors.set(value, color);
+      return color;
+    };
+
+    const surfaceAt = (target) => {
+      let r = 0, g = 0, b = 0, alpha = 0;
+      for (let element = target; element; element = element.parentElement) {
+        const style = window.getComputedStyle(element);
+        if (alpha < 0.999) {
+          const color = parseColor(style.backgroundColor);
+          const coverage = color[3] * (1 - alpha);
+          r += color[0] * coverage;
+          g += color[1] * coverage;
+          b += color[2] * coverage;
+          alpha += coverage;
+        }
+        const opacity = Number(style.opacity);
+        r *= opacity; g *= opacity; b *= opacity; alpha *= opacity;
+      }
+      return [r + 255 * (1 - alpha), g + 255 * (1 - alpha), b + 255 * (1 - alpha)];
+    };
+
+    const visibleSurfaceAt = (target) => {
+      const background = surfaceAt(target);
+      if (target?.closest("dialog[open]")) return background;
+
+      // The fixed frame and inverse corner fills ignore pointer events, so
+      // hit-testing alone would report the page behind these painted surfaces.
+      let frameStyle;
+      if (frame && frame.getClientRects().length) {
+        frameStyle = window.getComputedStyle(frame);
+        const bounds = frame.getBoundingClientRect();
+        const thickness = parseFloat(frameStyle.borderTopWidth);
+        const outerRadius = parseFloat(frameStyle.borderTopLeftRadius);
+        const outerDx = Math.max(bounds.left + outerRadius - pointerX, 0, pointerX - (bounds.right - outerRadius));
+        const outerDy = Math.max(bounds.top + outerRadius - pointerY, 0, pointerY - (bounds.bottom - outerRadius));
+        if (outerDx * outerDx + outerDy * outerDy > outerRadius * outerRadius) {
+          return frameStyle.boxShadow === "none" ? background : parseColor(frameStyle.borderTopColor);
+        }
+        const radius = Math.max(0, outerRadius - thickness);
+        const left = bounds.left + thickness, right = bounds.right - thickness;
+        const top = bounds.top + thickness, bottom = bounds.bottom - thickness;
+        const dx = Math.max(left + radius - pointerX, 0, pointerX - (right - radius));
+        const dy = Math.max(top + radius - pointerY, 0, pointerY - (bottom - radius));
+        if (
+          pointerX < left || pointerX > right || pointerY < top || pointerY > bottom ||
+          dx * dx + dy * dy > radius * radius
+        ) return parseColor(frameStyle.borderTopColor);
+      }
+
+      if (sidebar && page?.classList.contains("is-sidebar-collapsed")) {
+        const bounds = sidebar.getBoundingClientRect();
+        if (bounds.width > 0 && pointerX >= bounds.right - 1 && pointerX <= bounds.right + 32) {
+          for (const pseudo of ["::before", "::after"]) {
+            const style = window.getComputedStyle(sidebar, pseudo);
+            const width = parseFloat(style.width), height = parseFloat(style.height);
+            const left = bounds.right - parseFloat(style.right) - width;
+            const top = pseudo === "::before"
+              ? bounds.top + parseFloat(style.top)
+              : bounds.bottom - parseFloat(style.bottom) - height;
+            if (pointerX < left || pointerX > left + width || pointerY < top || pointerY > top + height) continue;
+            const cy = pseudo === "::before" ? top + height : top;
+            if (Math.hypot(pointerX - (left + width), pointerY - cy) < height - 0.5) continue;
+            const color = parseColor(window.getComputedStyle(sidebar).getPropertyValue("--frame-color").trim());
+            const opacity = Number(style.opacity) * color[3];
+            return background.map((channel, index) => channel * (1 - opacity) + color[index] * opacity);
+          }
+        }
+      }
+      return background;
+    };
+
+    const ensureTopLayer = (reorder = false) => {
+      if (!hasPopover) return;
+      if (reorder && cursor.matches(":popover-open")) cursor.hidePopover();
+      if (!cursor.matches(":popover-open")) cursor.showPopover();
+    };
 
     const showCursor = () => {
+      pointerActive = true;
+      ensureTopLayer();
       document.documentElement.dataset.cursor = "dot";
       cursor.classList.add("is-visible");
     };
 
     const hideCursor = () => {
+      pointerActive = false;
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = 0;
       cursor.classList.remove("is-visible", "is-interactive", "is-pressed");
       document.documentElement.removeAttribute("data-cursor");
+      if (hasPopover && cursor.matches(":popover-open")) cursor.hidePopover();
     };
 
     const renderCursor = () => {
       frameId = 0;
+      if (!pointerActive) return;
+      const target = document.elementFromPoint(pointerX, pointerY);
+      const channels = visibleSurfaceAt(target).slice(0, 3).map((value) => {
+        const channel = value / 255;
+        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+      const color = luminance > 0.179 ? "#000" : "#fff";
+      if (color !== currentColor) {
+        cursor.style.setProperty("--cursor-color", color);
+        currentColor = color;
+      }
+      cursor.classList.toggle("is-interactive", Boolean(isInteractive(target)));
       cursor.style.left = `${pointerX}px`;
       cursor.style.top = `${pointerY}px`;
+      if (performance.now() < refreshUntil) frameId = window.requestAnimationFrame(renderCursor);
+    };
+
+    const requestRender = () => {
+      if (pointerActive && !frameId) frameId = window.requestAnimationFrame(renderCursor);
+    };
+
+    const refreshAppearance = () => {
+      // Follow live CSS color/width transitions, including a stationary pointer.
+      refreshUntil = performance.now() + 650;
+      requestRender();
     };
 
     const handlePointerMove = (event) => {
+      if (
+        !finePointer.matches || event.pointerType === "touch" ||
+        (!hasPopover && document.querySelector("dialog[open]"))
+      ) {
+        hideCursor();
+        return;
+      }
       pointerX = event.clientX;
       pointerY = event.clientY;
       showCursor();
-      cursor.classList.toggle("is-interactive", Boolean(isInteractive(event.target)));
-
-      if (!frameId) {
-        frameId = window.requestAnimationFrame(renderCursor);
-      }
+      requestRender();
     };
 
     const handlePointerDown = (event) => {
@@ -55,6 +188,20 @@ export default function PointerEffects({ soundEnabled = false }) {
     };
 
     const handlePointerUp = () => cursor.classList.remove("is-pressed");
+    const handleCapabilityChange = () => { if (!finePointer.matches) hideCursor(); };
+    const appearanceObserver = new MutationObserver(refreshAppearance);
+    appearanceObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
+    if (page) appearanceObserver.observe(page, { attributes: true, attributeFilter: ["class"] });
+    const dialogObserver = new MutationObserver((records) => {
+      if (!records.some((record) => record.target instanceof HTMLDialogElement)) return;
+      if (!hasPopover && document.querySelector("dialog[open]")) {
+        hideCursor();
+        return;
+      }
+      if (pointerActive) ensureTopLayer(true);
+      refreshAppearance();
+    });
+    dialogObserver.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["open"] });
 
     document.documentElement.dataset.cursor = "dot";
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
@@ -63,6 +210,9 @@ export default function PointerEffects({ soundEnabled = false }) {
     window.addEventListener("pointercancel", handlePointerUp, { passive: true });
     window.addEventListener("pointerleave", hideCursor);
     window.addEventListener("blur", hideCursor);
+    window.addEventListener("scroll", requestRender, { passive: true, capture: true });
+    window.addEventListener("resize", refreshAppearance, { passive: true });
+    finePointer.addEventListener("change", handleCapabilityChange);
 
     return () => {
       if (frameId) {
@@ -74,6 +224,12 @@ export default function PointerEffects({ soundEnabled = false }) {
       window.removeEventListener("pointercancel", handlePointerUp);
       window.removeEventListener("pointerleave", hideCursor);
       window.removeEventListener("blur", hideCursor);
+      window.removeEventListener("scroll", requestRender, true);
+      window.removeEventListener("resize", refreshAppearance);
+      finePointer.removeEventListener("change", handleCapabilityChange);
+      appearanceObserver.disconnect();
+      dialogObserver.disconnect();
+      if (hasPopover && cursor.matches(":popover-open")) cursor.hidePopover();
       document.documentElement.removeAttribute("data-cursor");
     };
   }, []);
@@ -223,7 +379,7 @@ export default function PointerEffects({ soundEnabled = false }) {
 
       const target = isInteractive(event.target);
       const previousTarget = isInteractive(event.relatedTarget);
-      if (!target || target === previousTarget) {
+      if (!target || target === previousTarget || target.closest("[data-ui-sound]")) {
         return;
       }
 
@@ -240,6 +396,10 @@ export default function PointerEffects({ soundEnabled = false }) {
         return;
       }
       pressedTarget = isInteractive(event.target);
+      if (pressedTarget?.closest("[data-ui-sound]")) {
+        pressedTarget = null;
+        return;
+      }
       if (pressedTarget) {
         void play("press");
       }
@@ -269,5 +429,5 @@ export default function PointerEffects({ soundEnabled = false }) {
     };
   }, [soundEnabled]);
 
-  return <div ref={cursorRef} className="cursor-dot" aria-hidden="true" />;
+  return <div ref={cursorRef} className="cursor-dot" popover="manual" aria-hidden="true" />;
 }

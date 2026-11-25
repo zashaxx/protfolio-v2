@@ -1,0 +1,122 @@
+.email-copy-button {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.email-copy-button > svg {
+  grid-area: 1 / 1;
+  opacity: 0.72;
+  transition: opacity 150ms ease;
+}
+
+.email-copy-button:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.email-copy-button:is(:hover, :focus-visible, .is-copied) > svg {
+  opacity: 1;
+}
+
+.email-copy-button:active {
+  transform: scale(0.97);
+}
+
+.email-copy-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.email-copy-button--compact {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.email-copy-button--compact > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.email-copy-button .email-copy-button__check,
+.email-copy-button.is-copied .email-copy-button__copy {
+  display: none;
+}
+
+.email-copy-button.is-copied .email-copy-button__check {
+  display: block;
+}
+
+.email-copy-button__feedback {
+  position: absolute;
+  z-index: 2;
+  bottom: 100%;
+  left: 50%;
+  width: max-content;
+  margin-bottom: 2px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--background);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  animation:
+    email-copy-float 1600ms cubic-bezier(0.23, 1, 0.32, 1) forwards,
+    email-copy-fade 1600ms linear forwards;
+}
+
+.email-copy-button__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes email-copy-float {
+  from { transform: translate(-50%, 8px); }
+  to { transform: translate(-50%, -56px); }
+}
+
+@keyframes email-copy-fade {
+  0% { opacity: 0; filter: blur(0); }
+  10% { opacity: 1; filter: blur(0); }
+  100% { opacity: 0; filter: blur(1.5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .email-copy-button {
+    transition: none;
+  }
+
+  .email-copy-button:active {
+    transform: none;
+  }
+
+  .email-copy-button__feedback {
+    opacity: 1;
+    transform: translate(-50%, -4px);
+    animation: none;
+    filter: none;
+  }
+}

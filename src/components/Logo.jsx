@@ -1,45 +1,182 @@
-import { useRef, useState, useLayoutEffect } from "react";
+import { useEffect, useImperativeHandle, useRef } from "react";
+import clickSoundUrl from "../assets/email-copy-click.mp3";
+import "./Logo.css";
 
-export default function Logo({ animate = true }) {
-  const pathRef = useRef(null);
-  const [animKey, setAnimKey] = useState(0);
+// Separate the original pen strokes so even the short strokes draw gradually.
+const LOGO_STROKES = "M 78.501,78.121 C 76.534,75.247 73.345,73.863 69.965,73.257 C 67.072,72.739 64.040,72.792 61.155,73.225 C 54.707,74.191 49.003,77.056 43.459,80.336 C 37.286,83.989 31.312,88.158 25.903,93.203 C 20.429,98.309 15.533,104.311 12.056,110.639 C 11.253,112.102 10.525,113.582 10.245,115.195 C 10.000,116.609 10.100,118.125 10.315,119.581 C 10.538,121.083 10.884,122.521 11.433,123.991 C 12.060,125.670 12.951,127.390 14.212,128.500 C 16.452,130.472 19.857,130.516 22.896,129.806 C 26.163,129.042 29.006,127.406 31.749,125.509 C 37.930,121.235 43.600,115.640 48.980,110.150 C 50.307,108.796 51.616,107.448 52.879,106.017 C 54.153,104.574 55.380,103.046 56.867,101.995 C 57.532,101.524 58.250,101.149 59.006,100.828 C 59.700,100.533 60.427,100.284 61.161,100.058 C 62.680,99.590 64.230,99.217 65.591,99.755 M 77.425,87.205 C 74.316,87.508 72.299,89.706 70.587,92.153 C 68.821,94.677 67.381,97.467 65.591,99.755 M 122.009,89.835 C 119.940,89.006 117.875,89.650 116.192,90.828 C 114.298,92.152 112.886,94.152 111.532,96.158 C 108.851,100.130 106.396,104.126 103.426,107.832 C 100.339,111.685 96.696,115.224 93.085,118.653 C 89.559,122.002 86.064,125.246 81.987,127.853 C 78.434,130.125 74.439,131.913 70.291,131.603 C 69.266,131.526 68.232,131.321 67.303,130.919 C 66.240,130.459 65.316,129.740 64.604,128.837 C 63.368,127.267 62.770,125.139 62.527,123.048 C 62.062,119.042 62.897,115.167 63.693,111.311 C 64.479,107.507 65.227,103.720 65.591,99.755 M 115.196,118.402 C 112.793,124.038 109.863,129.734 104.319,133.702 M 122.009,89.835 C 121.783,92.296 121.369,94.681 120.735,96.973 C 120.051,99.444 119.111,101.808 118.280,104.218 C 116.726,108.728 115.555,113.397 115.196,118.402 M 123.204,72.861 C 124.950,73.140 126.570,73.721 127.746,75.372 M 127.746,75.372 C 127.686,80.960 124.446,85.231 122.009,89.835 M 135.635,102.026 C 134.789,102.635 133.559,102.740 132.578,103.153 C 131.568,103.578 130.821,104.330 130.110,105.157 C 128.561,106.958 127.186,109.111 125.783,111.167 C 125.086,112.189 124.382,113.187 123.633,114.136 C 123.247,114.626 122.849,115.103 122.377,115.476 C 121.980,115.791 121.532,116.032 121.071,116.262 C 119.224,117.185 117.194,117.922 115.196,118.402 M 131.810,72.503 C 130.498,73.561 129.332,74.972 127.746,75.372 M 135.277,87.803 C 135.308,90.174 134.489,92.631 135.755,94.616 M 135.755,94.616 C 135.508,96.954 135.670,99.895 135.635,102.026 M 168.386,73.459 C 165.315,73.668 162.641,75.211 160.028,76.839 C 157.249,78.570 154.540,80.399 151.908,82.409 C 149.096,84.556 146.370,86.911 143.781,89.404 C 142.469,90.667 141.191,91.965 139.720,92.920 C 138.510,93.705 137.170,94.258 135.755,94.616 M 131.810,72.503 C 132.570,65.439 135.885,59.334 139.191,53.280 C 142.750,46.760 146.299,40.300 150.834,34.159 C 155.766,27.481 161.865,21.181 168.375,16.021 C 171.318,13.688 174.346,11.588 178.025,10.743 C 181.256,10.000 184.990,10.225 187.348,12.261 C 188.667,13.400 189.557,15.107 189.763,16.875 C 189.950,18.470 189.581,20.116 189.082,21.686 C 187.979,25.154 186.240,28.251 184.333,31.296 C 180.217,37.868 175.318,44.191 169.733,49.922 C 163.987,55.818 157.514,61.089 150.931,65.695 C 147.852,67.850 144.749,69.859 141.373,71.565 C 138.289,73.123 134.979,74.428 131.810,72.503 M 135.635,102.026 C 140.631,118.674 147.196,135.239 159.085,149.185 C 162.356,153.021 166.030,156.660 170.324,159.018 C 172.201,160.048 174.196,160.834 176.305,161.048 C 178.195,161.239 180.177,160.970 182.158,160.596 C 184.400,160.173 186.642,159.616 188.051,158.103 C 189.396,156.660 189.983,154.347 189.988,152.195 C 190.000,147.676 187.451,143.867 184.523,140.754".split(/(?=M\s)/);
+const CYCLE_DURATION = 32000;
+const STROKE_DURATION = 12000;
+const randomBetween = (min, max) => min + Math.random() * (max - min);
 
-  useLayoutEffect(() => {
-    if (!pathRef.current || !animate) return;
-    pathRef.current.style.animation = `draw-undraw 12s ease-in-out infinite`;
-  }, [animKey, animate]);
+export default function Logo({ ref, animate = true, soundEnabled = false }) {
+  const svgRef = useRef(null);
+  const pathsRef = useRef([]);
+  const controllerRef = useRef(null);
+  const audioRef = useRef(null);
 
-  const handleClick = () => setAnimKey((k) => k + 1);
+  useEffect(() => {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const paths = pathsRef.current.filter(Boolean);
+    const lengths = paths.map((path) => path.getTotalLength() + 2);
+    let group = null;
+    let timer = null;
+    let lastDirection = Math.random() < 0.5 ? -1 : 1;
+    let disposed = false;
+
+    paths.forEach((path, index) => {
+      path.style.strokeDasharray = `${lengths[index]} ${lengths[index]}`;
+    });
+
+    const visible = () => animate && !document.hidden
+      && Boolean(svgRef.current?.getClientRects().length);
+    const clearTimer = () => {
+      window.clearTimeout(timer);
+      timer = null;
+    };
+    const cancel = () => {
+      const previous = group;
+      group = null;
+      previous?.animations.forEach((animation) => {
+        animation.onfinish = null;
+        animation.cancel();
+      });
+    };
+    const schedule = () => {
+      clearTimer();
+      if (!disposed && visible() && !motion.matches) {
+        timer = window.setTimeout(() => play(), randomBetween(12000, 30000));
+      }
+    };
+
+    function play() {
+      if (disposed || !visible() || motion.matches) return;
+      clearTimer();
+      // Changing the rate preserves the current stroke position on repeated clicks.
+      const speed = randomBetween(0.85, 1.1);
+      if (group) {
+        const currentTime = Number(group.animations[0].currentTime) || 0;
+        const direction = currentTime < 600 ? 1
+          : currentTime > CYCLE_DURATION - 600 ? -1 : -lastDirection;
+        lastDirection = direction;
+        group.animations.forEach((animation) => {
+          animation.updatePlaybackRate(direction * speed);
+          if (animation.playState === "paused") animation.play();
+        });
+        return;
+      }
+
+      // Overlapping, long pen strokes leave the monogram recognizable throughout.
+      const animations = paths.map((path, index) => {
+        const start = (index / (paths.length - 1)) * (CYCLE_DURATION - STROKE_DURATION);
+        const offset = lengths[index];
+        const animation = path.animate([
+          { strokeDashoffset: 0, offset: 0 },
+          { strokeDashoffset: 0, offset: start / CYCLE_DURATION, easing: "ease-in-out" },
+          { strokeDashoffset: offset, offset: (start + STROKE_DURATION * 0.46) / CYCLE_DURATION },
+          { strokeDashoffset: offset, offset: (start + STROKE_DURATION * 0.54) / CYCLE_DURATION, easing: "ease-in-out" },
+          { strokeDashoffset: 0, offset: (start + STROKE_DURATION) / CYCLE_DURATION },
+          { strokeDashoffset: 0, offset: 1 },
+        ], { duration: CYCLE_DURATION, easing: "linear" });
+        animation.pause();
+        return animation;
+      });
+      lastDirection *= -1;
+      const cycle = { animations };
+      group = cycle;
+      animations[0].onfinish = () => {
+        if (disposed || group !== cycle) return;
+        cancel();
+        schedule();
+      };
+      animations.forEach((animation) => {
+        animation.currentTime = lastDirection > 0 ? 0 : CYCLE_DURATION;
+        animation.playbackRate = lastDirection * speed;
+        animation.play();
+      });
+    }
+
+    const handleVisibility = () => {
+      if (!visible()) {
+        clearTimer();
+        group?.animations.forEach((animation) => animation.pause());
+      } else if (!motion.matches) {
+        if (group) group.animations.forEach((animation) => animation.play());
+        else schedule();
+      }
+    };
+    const handleMotion = () => {
+      if (motion.matches) {
+        clearTimer();
+        cancel();
+      } else if (visible()) play();
+    };
+    controllerRef.current = { replay: play };
+    motion.addEventListener("change", handleMotion);
+    desktop.addEventListener("change", handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
+    if (visible() && !motion.matches) play();
+
+    return () => {
+      disposed = true;
+      clearTimer();
+      cancel();
+      controllerRef.current = null;
+      motion.removeEventListener("change", handleMotion);
+      desktop.removeEventListener("change", handleVisibility);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [animate]);
+
+  useEffect(() => {
+    if (!animate || !soundEnabled) return undefined;
+    const audio = new Audio(clickSoundUrl);
+    audio.preload = "auto";
+    audio.volume = 0.165;
+    audioRef.current = audio;
+    audio.load();
+
+    return () => {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      if (audioRef.current === audio) audioRef.current = null;
+    };
+  }, [animate, soundEnabled]);
+
+  useImperativeHandle(ref, () => ({
+    replay() {
+      if (!animate) return;
+      controllerRef.current?.replay();
+      // Ambient cycles and menu changes stay silent; sound follows manual clicks.
+      const audio = soundEnabled ? audioRef.current : null;
+      if (!audio) return;
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        void audio.play().catch(() => {});
+      } catch {
+        // The logo and home link stay usable if playback is unavailable.
+      }
+    },
+  }), [animate, soundEnabled]);
 
   return (
     <svg
-      key={animKey}
+      ref={svgRef}
       viewBox="0 0 200.00 171.24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      onClick={handleClick}
-      style={{ cursor: "pointer" }}
+      focusable="false"
     >
-      <style>{`
-        @keyframes draw-undraw {
-          0%, 100% { stroke-dashoffset: 732.52; }
-          35%, 65% { stroke-dashoffset: 0; }
-        }
-        .logo-path {
-          stroke: #172033;
-          stroke-width: 9;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-          stroke-dasharray: 732.52;
-          stroke-dashoffset: 732.52;
-        }
-        .dark .logo-path { stroke: #f1f5fb; }
-      `}</style>
-      <path
-        ref={pathRef}
-        className="logo-path"
-        d="M 78.501,78.121 C 76.534,75.247 73.345,73.863 69.965,73.257 C 67.072,72.739 64.040,72.792 61.155,73.225 C 54.707,74.191 49.003,77.056 43.459,80.336 C 37.286,83.989 31.312,88.158 25.903,93.203 C 20.429,98.309 15.533,104.311 12.056,110.639 C 11.253,112.102 10.525,113.582 10.245,115.195 C 10.000,116.609 10.100,118.125 10.315,119.581 C 10.538,121.083 10.884,122.521 11.433,123.991 C 12.060,125.670 12.951,127.390 14.212,128.500 C 16.452,130.472 19.857,130.516 22.896,129.806 C 26.163,129.042 29.006,127.406 31.749,125.509 C 37.930,121.235 43.600,115.640 48.980,110.150 C 50.307,108.796 51.616,107.448 52.879,106.017 C 54.153,104.574 55.380,103.046 56.867,101.995 C 57.532,101.524 58.250,101.149 59.006,100.828 C 59.700,100.533 60.427,100.284 61.161,100.058 C 62.680,99.590 64.230,99.217 65.591,99.755 M 77.425,87.205 C 74.316,87.508 72.299,89.706 70.587,92.153 C 68.821,94.677 67.381,97.467 65.591,99.755 M 122.009,89.835 C 119.940,89.006 117.875,89.650 116.192,90.828 C 114.298,92.152 112.886,94.152 111.532,96.158 C 108.851,100.130 106.396,104.126 103.426,107.832 C 100.339,111.685 96.696,115.224 93.085,118.653 C 89.559,122.002 86.064,125.246 81.987,127.853 C 78.434,130.125 74.439,131.913 70.291,131.603 C 69.266,131.526 68.232,131.321 67.303,130.919 C 66.240,130.459 65.316,129.740 64.604,128.837 C 63.368,127.267 62.770,125.139 62.527,123.048 C 62.062,119.042 62.897,115.167 63.693,111.311 C 64.479,107.507 65.227,103.720 65.591,99.755 M 115.196,118.402 C 112.793,124.038 109.863,129.734 104.319,133.702 M 122.009,89.835 C 121.783,92.296 121.369,94.681 120.735,96.973 C 120.051,99.444 119.111,101.808 118.280,104.218 C 116.726,108.728 115.555,113.397 115.196,118.402 M 123.204,72.861 C 124.950,73.140 126.570,73.721 127.746,75.372 M 127.746,75.372 C 127.686,80.960 124.446,85.231 122.009,89.835 M 135.635,102.026 C 134.789,102.635 133.559,102.740 132.578,103.153 C 131.568,103.578 130.821,104.330 130.110,105.157 C 128.561,106.958 127.186,109.111 125.783,111.167 C 125.086,112.189 124.382,113.187 123.633,114.136 C 123.247,114.626 122.849,115.103 122.377,115.476 C 121.980,115.791 121.532,116.032 121.071,116.262 C 119.224,117.185 117.194,117.922 115.196,118.402 M 131.810,72.503 C 130.498,73.561 129.332,74.972 127.746,75.372 M 135.277,87.803 C 135.308,90.174 134.489,92.631 135.755,94.616 M 135.755,94.616 C 135.508,96.954 135.670,99.895 135.635,102.026 M 168.386,73.459 C 165.315,73.668 162.641,75.211 160.028,76.839 C 157.249,78.570 154.540,80.399 151.908,82.409 C 149.096,84.556 146.370,86.911 143.781,89.404 C 142.469,90.667 141.191,91.965 139.720,92.920 C 138.510,93.705 137.170,94.258 135.755,94.616 M 131.810,72.503 C 132.570,65.439 135.885,59.334 139.191,53.280 C 142.750,46.760 146.299,40.300 150.834,34.159 C 155.766,27.481 161.865,21.181 168.375,16.021 C 171.318,13.688 174.346,11.588 178.025,10.743 C 181.256,10.000 184.990,10.225 187.348,12.261 C 188.667,13.400 189.557,15.107 189.763,16.875 C 189.950,18.470 189.581,20.116 189.082,21.686 C 187.979,25.154 186.240,28.251 184.333,31.296 C 180.217,37.868 175.318,44.191 169.733,49.922 C 163.987,55.818 157.514,61.089 150.931,65.695 C 147.852,67.850 144.749,69.859 141.373,71.565 C 138.289,73.123 134.979,74.428 131.810,72.503 M 135.635,102.026 C 140.631,118.674 147.196,135.239 159.085,149.185 C 162.356,153.021 166.030,156.660 170.324,159.018 C 172.201,160.048 174.196,160.834 176.305,161.048 C 178.195,161.239 180.177,160.970 182.158,160.596 C 184.400,160.173 186.642,159.616 188.051,158.103 C 189.396,156.660 189.983,154.347 189.988,152.195 C 190.000,147.676 187.451,143.867 184.523,140.754"
-      />
+      {LOGO_STROKES.map((stroke, index) => (
+        <path
+          key={stroke}
+          ref={(path) => { pathsRef.current[index] = path; }}
+          className="logo-path"
+          d={stroke}
+        />
+      ))}
     </svg>
   );
 }

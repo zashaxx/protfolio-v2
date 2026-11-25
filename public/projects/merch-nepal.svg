@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="bag" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#d7e3b4"/>
+      <stop offset="1" stop-color="#8d9d66"/>
+    </linearGradient>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#1c2320"/>
+      <stop offset="1" stop-color="#101612"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-opacity=".3"/></filter>
+  </defs>
+  <rect width="800" height="500" fill="url(#background)"/>
+  <g fill="none" stroke="#edf0df" stroke-opacity=".08">
+    <path d="M0 100h800M0 200h800M0 300h800M0 400h800M100 0v500M200 0v500M300 0v500M400 0v500M500 0v500M600 0v500M700 0v500"/>
+  </g>
+  <g font-family="Arial, sans-serif" fill="#f0f0e6">
+    <text x="44" y="44" font-size="18" font-weight="800" letter-spacing="-1">MERCH<tspan fill="#c7d9a0">.</tspan></text>
+    <g font-size="10" fill="#b8beb4" letter-spacing="1">
+      <text x="350" y="41">EXPLORE</text><text x="445" y="41">COLLECTIONS</text><text x="575" y="41">ABOUT</text>
+    </g>
+    <rect x="695" y="24" width="62" height="26" rx="13" fill="none" stroke="#5e6b55"/>
+    <text x="711" y="41" font-size="10">SHOP ↗</text>
+    <text x="48" y="151" font-size="11" letter-spacing="3" fill="#c7d9a0">BUILT FOR NEPAL.</text>
+    <text x="43" y="227" font-size="77" font-weight="900" letter-spacing="-5">Good finds.</text>
+    <text x="43" y="305" font-size="77" font-weight="900" letter-spacing="-5" fill="#c7d9a0">Great taste.</text>
+    <text x="49" y="345" font-size="13" fill="#b8beb4">A connected shopping experience, from store to door.</text>
+    <rect x="48" y="373" width="135" height="35" rx="18" fill="#d4e2b5"/>
+    <text x="68" y="395" font-size="11" font-weight="700" fill="#1c2320">Explore the store ↗</text>
+    <text x="48" y="470" font-size="10" letter-spacing="1.5" fill="#85917e">COMMERCE. CONNECTED.</text>
+  </g>
+  <g transform="translate(563 129) rotate(10 83 130)" filter="url(#shadow)">
+    <path d="M13 61h140l17 197H-4z" fill="url(#bag)"/>
+    <path d="M50 78V40a33 33 0 0 1 66 0v38" fill="none" stroke="#e5eccf" stroke-width="9"/>
+    <path d="m153 61 17 197-22-12-8-170z" fill="#758354"/>
+    <text x="18" y="174" font-family="Arial, sans-serif" font-size="28" font-weight="900" letter-spacing="-2" fill="#263323">MERCH.</text>
+    <text x="49" y="194" font-family="Arial, sans-serif" font-size="8" letter-spacing="4" fill="#3e4c33">NEPAL</text>
+  </g>
+  <circle cx="728" cy="443" r="20" fill="none" stroke="#56634d"/>
+  <path d="m722 449 12-12m-12 0h12v12" fill="none" stroke="#d4e2b5" stroke-width="1.5"/>
+</svg>

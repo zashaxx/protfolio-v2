@@ -1,0 +1,7 @@
+.logo-path {
+  stroke: currentColor;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dashoffset: 0;
+}

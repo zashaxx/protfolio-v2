@@ -85,59 +85,61 @@ export default function GitHubContributions() {
         </a>
       </div>
 
-      {status === "loading" && (
-        <p className="contribution-state" role="status">
-          Loading contribution activity...
-        </p>
-      )}
+      <div data-reveal>
+        {status === "loading" && (
+          <p className="contribution-state" role="status">
+            Loading contribution activity...
+          </p>
+        )}
 
-      {status === "error" && (
-        <p className="contribution-state" role="status">
-          Contribution activity is temporarily unavailable.
-        </p>
-      )}
+        {status === "error" && (
+          <p className="contribution-state" role="status">
+            Contribution activity is temporarily unavailable.
+          </p>
+        )}
 
-      {status === "ready" && (
-        <div className="contribution-strip">
-          <a
-            href={`https://github.com/${githubUsername}`}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`${total} GitHub contributions in the last year`}
-          >
-            <svg
-              viewBox="0 0 689 91"
-              role="img"
-              aria-label="GitHub contribution graph, halftone style"
-              preserveAspectRatio="xMidYMid meet"
+        {status === "ready" && (
+          <div className="contribution-strip">
+            <a
+              href={`https://github.com/${githubUsername}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${total} GitHub contributions in the last year`}
             >
-              {weeks.flatMap((week, weekIndex) =>
-                week.map((day, dayIndex) => {
-                  if (!day) {
-                    return null;
-                  }
+              <svg
+                viewBox="0 0 689 91"
+                role="img"
+                aria-label="GitHub contribution graph, halftone style"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {weeks.flatMap((week, weekIndex) =>
+                  week.map((day, dayIndex) => {
+                    if (!day) {
+                      return null;
+                    }
 
-                  const level = Math.min(
-                    4,
-                    Math.max(0, Number(day.level || 0)),
-                  );
+                    const level = Math.min(
+                      4,
+                      Math.max(0, Number(day.level || 0)),
+                    );
 
-                  return (
-                    <circle
-                      key={day.date}
-                      cx={weekIndex * 13 + 6.5}
-                      cy={dayIndex * 13 + 6.5}
-                      r={levelRadii[level]}
-                      opacity={level === 0 ? 0.12 : 0.92}
-                    />
-                  );
-                }),
-              )}
-            </svg>
-          </a>
-          <p>{total.toLocaleString()} contributions in the last year</p>
-        </div>
-      )}
+                    return (
+                      <circle
+                        key={day.date}
+                        cx={weekIndex * 13 + 6.5}
+                        cy={dayIndex * 13 + 6.5}
+                        r={levelRadii[level]}
+                        opacity={level === 0 ? 0.12 : 0.92}
+                      />
+                    );
+                  }),
+                )}
+              </svg>
+            </a>
+            <p>{total.toLocaleString()} contributions in the last year</p>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

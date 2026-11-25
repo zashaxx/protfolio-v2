@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0v24" fill="none" stroke="#dedfce" stroke-width=".5"/></pattern>
+    <filter id="paper-shadow"><feDropShadow dx="0" dy="9" stdDeviation="9" flood-color="#324b37" flood-opacity=".12"/></filter>
+  </defs>
+  <rect width="800" height="500" fill="#f3f1e7"/>
+  <rect width="800" height="500" fill="url(#grid)"/>
+  <path d="M0 65h800" stroke="#d9ddce"/>
+  <g font-family="Arial, sans-serif" fill="#294d3d">
+    <g transform="translate(43 23)" fill="none" stroke="#294d3d" stroke-width="2"><path d="M0 0h12q6 0 6 5v18q-3-4-9-4H0zM36 0H24q-6 0-6 5v18q3-4 9-4h9z"/></g>
+    <text x="89" y="42" font-size="21" font-weight="700" letter-spacing="-1">GoodNotes</text>
+    <text x="539" y="39" font-size="11">Browse notes</text>
+    <rect x="659" y="21" width="94" height="27" rx="14" fill="#294d3d"/>
+    <text x="685" y="39" font-size="10" fill="#f5f4eb">Sign in ↗</text>
+    <text x="48" y="132" font-size="10" letter-spacing="2.4">A LITTLE LESS SEARCHING.</text>
+    <text x="44" y="194" font-size="55" font-weight="700" letter-spacing="-2.5">Your next</text>
+    <text x="44" y="254" font-size="55" font-weight="700" letter-spacing="-2.5">bright idea</text>
+    <text x="44" y="314" font-size="55" font-weight="700" letter-spacing="-2.5" font-style="italic">starts here.</text>
+    <text x="48" y="349" font-size="12" fill="#6b7b6a">University notes. All in one thoughtful place.</text>
+    <rect x="48" y="375" width="327" height="43" rx="7" fill="#fffef8" stroke="#d6dbcd"/>
+    <circle cx="69" cy="395" r="5" fill="none" stroke="#82917c" stroke-width="1.4"/>
+    <path d="m73 399 4 4" stroke="#82917c" stroke-width="1.4"/>
+    <text x="90" y="401" font-size="11" fill="#8d9786">Find your notes...</text>
+    <text x="48" y="468" font-size="10" letter-spacing="1" fill="#7c8a73">FIND. LEARN. MAKE IT YOURS.</text>
+  </g>
+  <g transform="translate(501 119) rotate(9 109 145)" filter="url(#paper-shadow)">
+    <rect x="15" y="3" width="211" height="278" rx="6" fill="#d6dfbd"/>
+    <rect x="-4" y="16" width="211" height="278" rx="6" fill="#e5e8d5" transform="rotate(-12 100 150)"/>
+    <rect x="0" y="0" width="211" height="278" rx="6" fill="#fffef8" stroke="#dce0d2"/>
+    <rect x="0" y="0" width="211" height="47" rx="6" fill="#294d3d"/>
+    <rect x="0" y="35" width="211" height="12" fill="#294d3d"/>
+    <g font-family="Arial, sans-serif"><text x="20" y="29" font-size="12" fill="#e8edda">A page of possibilities.</text><text x="20" y="84" font-size="20" font-weight="700" fill="#294d3d">Study notes</text><text x="20" y="106" font-size="10" fill="#84917b">YOUR RESOURCE LIBRARY</text></g>
+    <g stroke="#e0e4d5" stroke-width="2"><path d="M20 135h171M20 155h149M20 175h165M20 195h139M20 215h161"/></g>
+    <rect x="20" y="242" width="77" height="17" rx="8" fill="#e7edda"/>
+    <text x="34" y="254" font-family="Arial, sans-serif" font-size="8" fill="#526944">Download PDF</text>
+  </g>
+</svg>
