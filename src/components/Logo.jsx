@@ -52,18 +52,18 @@ export default function Logo({ ref, animate = true, soundEnabled = false }) {
     function play() {
       if (disposed || !visible() || motion.matches) return;
       clearTimer();
-      // Changing the rate preserves the current stroke position on repeated clicks.
-      const speed = randomBetween(0.85, 1.1);
+      // Manual clicks restart the complete stroke cycle at the chosen endpoint.
+      const speed = randomBetween(0.85, 1.1) * 1.7;
+      let direction;
       if (group) {
         const currentTime = Number(group.animations[0].currentTime) || 0;
-        const direction = currentTime < 600 ? 1
+        direction = currentTime < 600 ? 1
           : currentTime > CYCLE_DURATION - 600 ? -1 : -lastDirection;
+        cancel();
         lastDirection = direction;
-        group.animations.forEach((animation) => {
-          animation.updatePlaybackRate(direction * speed);
-          if (animation.playState === "paused") animation.play();
-        });
-        return;
+      } else {
+        lastDirection *= -1;
+        direction = lastDirection;
       }
 
       // Overlapping, long pen strokes leave the monogram recognizable throughout.
@@ -81,7 +81,6 @@ export default function Logo({ ref, animate = true, soundEnabled = false }) {
         animation.pause();
         return animation;
       });
-      lastDirection *= -1;
       const cycle = { animations };
       group = cycle;
       animations[0].onfinish = () => {
@@ -90,8 +89,8 @@ export default function Logo({ ref, animate = true, soundEnabled = false }) {
         schedule();
       };
       animations.forEach((animation) => {
-        animation.currentTime = lastDirection > 0 ? 0 : CYCLE_DURATION;
-        animation.playbackRate = lastDirection * speed;
+        animation.currentTime = direction > 0 ? 0 : CYCLE_DURATION;
+        animation.playbackRate = direction * speed;
         animation.play();
       });
     }

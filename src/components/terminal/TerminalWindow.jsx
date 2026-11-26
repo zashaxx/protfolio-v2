@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import { Minus, X } from "lucide-react";
 
-export default function TerminalWindow({ windowState, windowRef, position, dragHandlers, onClose, onMinimize, activeMode, onExitMode, children }) {
+export default function TerminalWindow({ windowState, windowRef, position, dragHandlers, onClose, onMinimize, activeMode, onExitMode, onClick, children }) {
   if (windowState === "closed") return null;
   const isOpen = windowState === "open";
 
@@ -14,15 +14,15 @@ export default function TerminalWindow({ windowState, windowRef, position, dragH
       aria-hidden={!isOpen}
       inert={!isOpen}
       ref={windowRef}
+      onClick={onClick}
       style={position ? { left: position.x, top: position.y } : undefined}
     >
       <header className="terminal-window__bar" {...dragHandlers}>
-        <div className="terminal-window__controls" role="group" aria-label="Window controls" data-ui-sound="terminal-control">
+        <div className="terminal-window__controls" role="group" aria-label="Window controls">
           <button
             className="terminal-window__control terminal-window__control--close"
             type="button"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => onClose(true)}
+            onClick={onClose}
             aria-label="Close terminal"
             title="Close terminal"
           >
@@ -31,7 +31,6 @@ export default function TerminalWindow({ windowState, windowRef, position, dragH
           <button
             className="terminal-window__control terminal-window__control--minimize"
             type="button"
-            onPointerDown={(event) => event.stopPropagation()}
             onClick={onMinimize}
             aria-label="Minimize terminal"
             title="Minimize terminal"

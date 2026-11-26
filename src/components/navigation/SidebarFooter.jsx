@@ -44,7 +44,7 @@ export default function SidebarFooter({ collapsed, soundEnabled, onSoundToggle, 
             <Mail size={13} strokeWidth={1.6} aria-hidden="true" />
             Email me
           </a>
-          <EmailCopyButton email={contactEmail} soundEnabled={soundEnabled} compact />
+          <EmailCopyButton email={contactEmail} compact />
         </div>
       </div>
     </div>

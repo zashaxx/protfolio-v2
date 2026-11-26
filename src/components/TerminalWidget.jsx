@@ -175,6 +175,11 @@ export default function TerminalWidget({ activeMode, onModeChange, soundEnabled,
       onMinimize={minimizeTerminal}
       activeMode={activeMode}
       onExitMode={exitMode}
+      onClick={(event) => {
+        if (isOpen && !event.target.closest(".terminal-window__control, .terminal-window__resize")) {
+          inputRef.current?.focus({ preventScroll: true });
+        }
+      }}
     >
       {activeMode === "play" && gameKind ? (
         <TerminalGame kind={gameKind} paused={!isOpen} />
