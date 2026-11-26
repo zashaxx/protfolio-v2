@@ -4,10 +4,12 @@ import "./TerminalEffects.css";
 
 const tourSteps = [
   {
-    selector: "#home h1, #projects-page-title, #stack-page-title",
-    at: "above",
+    selector: "#home h1",
+    fallback: ".brand__name, .mobile-brand, .brand__monogram",
+    first: true,
+    at: "name",
     free: true,
-    text: "Hi! I'm Aayush. Welcome to my portfolio! 👋",
+    text: "Hi! I'm Aayush. Welcome to my portfolio!",
   },
   {
     selector: ".hero-socials a, .detail-page__back",
@@ -61,12 +63,19 @@ const tourSteps = [
   },
   {
     free: true,
-    text: "That's the tour. Scroll around and enjoy your stay! ✌️",
+    text: "That's the tour. Scroll around and enjoy your stay!",
   },
 ];
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-const random = (min, max) => min + Math.random() * (max - min);
+
+// Fixed acceleration and cruising speed make short and long trips predictable.
+function glideProgress(progress, ramp) {
+  const accelerate = (t) => (t - ramp / Math.PI * Math.sin(Math.PI * t / ramp)) / (2 * (1 - ramp));
+  if (progress < ramp) return accelerate(progress);
+  if (progress > 1 - ramp) return 1 - accelerate(1 - progress);
+  return (progress - ramp / 2) / (1 - ramp);
+}
 
 function makeTextLayout(text, measure) {
   const parts = "Segmenter" in Intl
@@ -93,7 +102,7 @@ function makeTextLayout(text, measure) {
   };
 }
 
-export default function TerminalClone({ onExit, onMenuChange }) {
+export default function TerminalClone({ onExit, onMenuChange, onType }) {
   const cursorRef = useRef(null);
   const tagRef = useRef(null);
   const clipRef = useRef(null);
@@ -119,7 +128,7 @@ export default function TerminalClone({ onExit, onMenuChange }) {
     }
 
     const goal = { x: window.innerWidth + 40, y: window.innerHeight * 0.58 };
-    const shown = { ...goal, vx: 0, vy: 0 };
+    const shown = { ...goal };
     const waiters = [];
     let cancelScroll = null;
     let hovered = null;
@@ -129,10 +138,10 @@ export default function TerminalClone({ onExit, onMenuChange }) {
     let clock = 0;
     let previousFrame = 0;
     let running = true;
-    let typing = false;
-    let tremor = 1;
+    let writer = null;
     let layout = null;
     let preferAbove = false;
+    let tagGap = 1;
     let guideMenuOpen = false;
 
     const sleep = (duration) => !running ? Promise.resolve() : new Promise((resolve) => {
@@ -163,122 +172,82 @@ export default function TerminalClone({ onExit, onMenuChange }) {
       hovered?.classList.add("terminal-guide__hover");
     };
 
+    const visible = (element) => {
+      if (element.closest("[inert], [hidden]")) return false;
+      for (let parent = element; parent; parent = parent.parentElement) {
+        const style = getComputedStyle(parent);
+        if (style.visibility === "hidden" || style.display === "none" || Number(style.opacity) === 0) return false;
+      }
+      return true;
+    };
+
     const targets = (selector) => Array.from(document.querySelectorAll(selector))
       .filter((element) => {
-        if (element.closest("[inert]")) return false;
+        if (!visible(element)) return false;
         const rect = element.getBoundingClientRect();
         const scroller = element.closest(".sidebar-nav, .mobile-menu__nav");
         const viewport = scroller?.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0 && rect.top >= 0
-          && rect.bottom <= window.innerHeight && getComputedStyle(element).visibility !== "hidden"
+        return rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0
+          && rect.bottom <= window.innerHeight && rect.right <= window.innerWidth
           && (!viewport || (rect.top >= viewport.top && rect.bottom <= viewport.bottom));
       });
 
     const placeTag = (point) => {
       if (!layout) return;
-      const width = Math.max(name.offsetWidth, layout.width) + 22;
-      const height = name.offsetHeight + layout.height + 10;
+      const width = Math.max(layout.nameWidth, layout.width) + 22;
+      const height = layout.nameHeight + layout.height + 10;
       const fitsBelow = point.y + 19 + height + 10 <= window.innerHeight;
-      const fitsAbove = point.y - height - 10 >= 0;
+      const fitsAbove = point.y - height - tagGap - 10 >= 0;
       root.classList.toggle("is-up", fitsAbove && (preferAbove || !fitsBelow));
       const left = point.x + 16 + width + 10 > window.innerWidth;
       root.classList.toggle("is-left", left);
       const tagLeft = left ? point.x - width - 1 : point.x + 16;
-      const tagTop = root.classList.contains("is-up") ? point.y - height - 1 : point.y + 19;
+      const tagTop = root.classList.contains("is-up") ? point.y - height - tagGap : point.y + 19;
       root.style.setProperty("--guide-tag-x", `${clamp(tagLeft, 12, window.innerWidth - width - 12) - tagLeft}px`);
       root.style.setProperty("--guide-tag-y", `${clamp(tagTop, 12, window.innerHeight - height - 12) - tagTop}px`);
     };
 
     const hush = () => {
-      clip.style.width = "0px";
-      clip.style.height = "0px";
       tag.classList.remove("is-talking", "is-typing");
     };
 
-    const type = async (layout) => {
-      if (!running) return;
+    const type = (layout) => new Promise((done) => {
+      if (!running) { done(); return; }
+      // Reserve the complete paragraph before revealing any letters. Neither
+      // wrapping nor bubble placement changes while the description types.
       inner.style.width = `${layout.width}px`;
       inner.replaceChildren(...layout.chars, caret);
+      clip.style.width = `${layout.width + 2}px`;
+      clip.style.height = `${layout.height}px`;
+      caret.style.transform = "translate(0px, 0px)";
+      placeTag(shown);
       tag.classList.add("is-talking", "is-typing");
-      typing = true;
-      let width = 0;
-      const pace = random(0.9, 1.15);
+      writer = { layout, index: 0, nextAt: clock + 60, done };
+    });
 
-      for (let index = 0; index < layout.chars.length && running; index += 1) {
-        const box = layout.boxes[index];
-        const part = layout.parts[index];
-        layout.chars[index].classList.add("is-on");
-        width = Math.max(width, box.right);
-        clip.style.width = `${Math.ceil(width) + 2}px`;
-        clip.style.height = `${box.bottom}px`;
-        caret.style.transform = `translate(${box.right}px, ${box.top}px)`;
-        let delay = random(8, 19) * pace;
-        if (/[.!?]/.test(part)) delay = random(70, 125);
-        else if (/[,;:]/.test(part)) delay = random(40, 80);
-        else if (part === " " && Math.random() < 0.1) delay += random(45, 110);
-        await sleep(delay);
-      }
-
-      typing = false;
-      tag.classList.remove("is-typing");
-    };
-
-    const glide = (to, duration) => new Promise((done) => {
+    const moveTo = (to) => new Promise((done) => {
       if (!running) { done(); return; }
-      const from = { x: goal.x, y: goal.y };
+      const from = { ...shown };
       const target = to();
-      const dx = target.x - from.x;
-      const dy = target.y - from.y;
-      const distance = Math.hypot(dx, dy) || 1;
-      const bend = Math.min(distance * random(0.08, 0.28), 64)
-        * (Math.random() < 0.5 ? -1 : 1);
-      const secondBend = Math.random() < 0.3 ? -bend * random(0.3, 0.8) : bend * random(0.4, 1.1);
+      const distance = Math.hypot(target.x - from.x, target.y - from.y);
+      const duration = Math.max(640, distance / 480 * 1000 + 320);
       move = {
-        from,
-        to,
-        t0: clock,
-        duration,
-        skew: random(0.72, 0.94),
-        nx: -dy / distance,
-        ny: dx / distance,
-        bend,
-        secondBend,
-        done,
+        from, to, target, t0: clock, duration,
+        ramp: Math.min(0.45, 320 / duration), done,
       };
     });
 
-    const moveTo = async (to, options = {}) => {
-      const offset = { x: random(-2.5, 2.5), y: random(-1.5, 1.5) };
-      const aim = options.direct ? to : () => {
-        const point = to();
-        return { x: point.x + offset.x, y: point.y + offset.y };
-      };
-      const target = aim();
-      const dx = target.x - goal.x;
-      const dy = target.y - goal.y;
-      const distance = Math.hypot(dx, dy) || 1;
-      const duration = (options.duration ?? clamp(210 + Math.sqrt(distance) * 25, 330, 1000)) * random(0.88, 1.15);
-      const roll = Math.random();
-
-      if (options.direct || distance < 160 || roll > 0.65) {
-        await glide(aim, duration);
-        return;
-      }
-
-      const miss = clamp(distance * random(0.025, 0.06), 5, 22) * (roll < 0.4 ? 1 : -1);
-      const drift = random(-0.5, 0.5) * miss;
-      const overX = dx / distance * miss - dy / distance * drift;
-      const overY = dy / distance * miss + dx / distance * drift;
-      await glide(() => {
-        const point = aim();
-        return { x: point.x + overX, y: point.y + overY };
-      }, duration);
-      await sleep(random(45, 100));
-      await glide(aim, random(145, 230));
-    };
-
     const anchor = (element, at) => () => {
       const rect = element.getBoundingClientRect();
+      if (at === "name") {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const textRect = Array.from(range.getClientRects()).find((box) => box.width > 0 && box.height > 0) ?? rect;
+        return {
+          x: textRect.left + Math.min(18, textRect.width / 2),
+          y: textRect.top + Math.min(20, textRect.height / 2),
+        };
+      }
       if (at === "above") return {
         x: rect.left - 12,
         y: Math.max(rect.top - 24, (layout?.height ?? 0) + name.offsetHeight + 24),
@@ -300,10 +269,10 @@ export default function TerminalClone({ onExit, onMenuChange }) {
         await sleep(500);
         if (!running) return;
       }
-      if (onMenuChange && step.menu && step.selector) {
+      if (step.menu && step.selector) {
         const menuItem = Array.from(document.querySelectorAll(step.selector))
-          .find((element) => element.closest(".mobile-menu__nav"));
-        const scroller = menuItem?.closest(".mobile-menu__nav");
+          .find((element) => visible(element) && element.closest(".sidebar-nav, .mobile-menu__nav"));
+        const scroller = menuItem?.closest(".sidebar-nav, .mobile-menu__nav");
         if (scroller) {
           const itemRect = menuItem.getBoundingClientRect();
           const scrollRect = scroller.getBoundingClientRect();
@@ -312,35 +281,39 @@ export default function TerminalClone({ onExit, onMenuChange }) {
               top: scroller.scrollTop + itemRect.top - scrollRect.top - (scrollRect.height - itemRect.height) / 2,
               behavior: "smooth",
             });
-            await sleep(400);
+            await sleep(500);
             if (!running) return;
           }
         }
       }
-      const elements = step.selector ? targets(step.selector) : [];
+      let elements = step.selector ? targets(step.selector) : [];
+      if (!elements.length && step.fallback) elements = targets(step.fallback);
+      if (step.first) elements = elements.slice(0, 1);
       if (!elements.length && !step.free) return;
       const points = elements.length ? elements.map((element) => anchor(element, step.at)) : [openSpace];
-      layout = makeTextLayout(step.text, measure);
-      preferAbove = step.at === "above";
       hush();
-      placeTag(points[0]());
+      layout = makeTextLayout(step.text, measure);
+      layout.nameWidth = name.offsetWidth;
+      layout.nameHeight = name.offsetHeight;
+      preferAbove = step.at === "above" || step.at === "name";
+      tagGap = step.at === "name" ? 16 : 1;
+      root.style.setProperty("--guide-tag-gap", `${tagGap}px`);
       setHover(elements[0]);
       await moveTo(points[0]);
-      await sleep(random(70, 130));
+      await sleep(170);
       await type(layout);
 
       if (points.length > 1) {
-        await sleep(random(550, 750));
+        await sleep(800);
         for (let index = 1; index < points.length; index += 1) {
           if (!running) break;
-          await sleep(random(80, 150));
+          await sleep(380);
           setHover(elements[index]);
-          placeTag(points[index]());
-          await moveTo(points[index], { duration: random(240, 340) });
+          await moveTo(points[index]);
         }
-        await sleep(random(550, 750));
+        await sleep(800);
       } else {
-        await sleep((850 + layout.chars.length * 20) * random(0.95, 1.15));
+        await sleep(Math.max(1200, layout.chars.length * 21));
       }
 
       setHover(null);
@@ -357,19 +330,14 @@ export default function TerminalClone({ onExit, onMenuChange }) {
         frame = window.requestAnimationFrame(animate);
         return;
       }
-      const delta = deltaMs / 1000;
       clock += deltaMs;
 
       if (move) {
         const task = move;
         const progress = Math.min((clock - task.t0) / task.duration, 1);
-        const biased = Math.pow(progress, task.skew);
-        const eased = biased ** 3 * (biased * (biased * 6 - 15) + 10);
-        const side = 3 * (1 - eased) ** 2 * eased * task.bend
-          + 3 * (1 - eased) * eased ** 2 * task.secondBend;
-        const point = task.to();
-        goal.x = task.from.x + (point.x - task.from.x) * eased + task.nx * side;
-        goal.y = task.from.y + (point.y - task.from.y) * eased + task.ny * side;
+        const eased = glideProgress(progress, task.ramp);
+        shown.x = task.from.x + (task.target.x - task.from.x) * eased;
+        shown.y = task.from.y + (task.target.y - task.from.y) * eased;
         if (progress === 1) {
           rest = task.to;
           move = null;
@@ -377,28 +345,35 @@ export default function TerminalClone({ onExit, onMenuChange }) {
         }
       } else if (rest) {
         const point = rest();
-        goal.x = point.x;
-        goal.y = point.y;
+        // Follow scroll/resize changes without teleporting or oscillating. A
+        // stationary target stays completely still, including during typing.
+        const follow = 1 - Math.exp(-deltaMs / 140);
+        for (const axis of ["x", "y"]) {
+          const distance = point[axis] - shown[axis];
+          shown[axis] = Math.abs(distance) < 0.05 ? point[axis] : shown[axis] + distance * follow;
+        }
       }
-      placeTag(move ? move.to() : goal);
+      placeTag(shown);
+      root.style.transform = `translate3d(${shown.x.toFixed(2)}px, ${shown.y.toFixed(2)}px, 0)`;
+      root.dataset.moving = String(Boolean(move));
 
-      const spring = 190;
-      const damping = 2 * Math.sqrt(spring) * 0.82;
-      const hops = Math.max(1, Math.ceil(deltaMs / 12));
-      const hop = delta / hops;
-      for (let index = 0; index < hops; index += 1) {
-        shown.vx += (spring * (goal.x - shown.x) - damping * shown.vx) * hop;
-        shown.vy += (spring * (goal.y - shown.y) - damping * shown.vy) * hop;
-        shown.x += shown.vx * hop;
-        shown.y += shown.vy * hop;
+      if (writer && clock >= writer.nextAt) {
+        const task = writer;
+        while (task.index < task.layout.chars.length && clock >= task.nextAt) {
+          const index = task.index++;
+          const part = task.layout.parts[index], box = task.layout.boxes[index];
+          task.layout.chars[index].classList.add("is-on");
+          caret.style.transform = `translate(${box.right}px, ${box.top}px)`;
+          if (/\S/u.test(part)) onType?.(part);
+          const delay = /[.!?]/u.test(part) ? 145 : /[,;:]/u.test(part) ? 75 : 33;
+          task.nextAt += delay;
+        }
+        if (task.index === task.layout.chars.length && clock >= task.nextAt) {
+          tag.classList.remove("is-typing");
+          writer = null;
+          task.done();
+        }
       }
-
-      tremor += ((typing ? 0 : 1) - tremor) * Math.min(deltaMs / 280, 1);
-      const x = shown.x + (Math.sin(clock / 830 + 1.3) * 1.5
-        + Math.sin(clock / 310 + 4.1) * 0.6 + Math.sin(clock / 127) * 0.22) * tremor;
-      const y = shown.y + (Math.cos(clock / 1010 + 0.4) * 1.3
-        + Math.sin(clock / 370 + 2.2) * 0.55 + Math.cos(clock / 141 + 5) * 0.2) * tremor;
-      root.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
 
       for (let index = waiters.length - 1; index >= 0; index -= 1) {
         if (waiters[index].at <= clock) waiters.splice(index, 1)[0].done();
@@ -423,7 +398,7 @@ export default function TerminalClone({ onExit, onMenuChange }) {
       hush();
       setHover(null);
       await sleep(300);
-      await moveTo(() => ({ x: window.innerWidth + 80, y: window.innerHeight * 0.3 }), { direct: true });
+      await moveTo(() => ({ x: window.innerWidth + 80, y: window.innerHeight * 0.3 }));
       root.classList.remove("is-here");
       await sleep(450);
       if (running) onExit();
@@ -451,13 +426,15 @@ export default function TerminalClone({ onExit, onMenuChange }) {
       motion.removeEventListener("change", handleMotion);
       cancelScroll?.();
       waiters.splice(0).forEach((waiter) => waiter.done());
+      writer?.done();
+      writer = null;
       move?.done();
       move = null;
       setHover(null);
       if (guideMenuOpen) onMenuChange?.(false);
       root.classList.remove("is-here", "is-away", "is-up", "is-left");
     };
-  }, [onExit, onMenuChange]);
+  }, [onExit, onMenuChange, onType]);
 
   return createPortal(
     <div className="terminal-guide" ref={cursorRef} aria-hidden="true">

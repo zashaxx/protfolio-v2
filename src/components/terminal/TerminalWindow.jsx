@@ -1,21 +1,33 @@
 import { createPortal } from "react-dom";
 import { Minus, X } from "lucide-react";
 
-export default function TerminalWindow({ windowState, windowRef, position, dragHandlers, onClose, onMinimize, activeMode, onExitMode, onClick, children }) {
+const resizeDirections = ["e", "se", "s", "w"];
+
+export default function TerminalWindow({ windowState, windowRef, position, size, dragHandlers, resizeHandlers, onClose, onMinimize, activeMode, onExitMode, onClick, children }) {
   if (windowState === "closed") return null;
   const isOpen = windowState === "open";
+  const isPlaying = activeMode === "play";
+  const width = size?.width ?? (isPlaying ? 760 : undefined);
+  const height = size?.height ?? (isPlaying ? 560 : undefined);
+  const left = isPlaying && position
+    ? `min(${position.x}px, max(8px, calc(100vw - ${width}px - 8px)))`
+    : position?.x;
+  const top = isPlaying && position
+    ? `min(${position.y}px, max(8px, calc(100vh - ${height}px - 8px)))`
+    : position?.y;
 
   return createPortal(
     <section
       className="terminal-window"
       data-window-state={windowState}
+      data-active-mode={activeMode ?? "command"}
       role="dialog"
       aria-labelledby="terminal-title"
       aria-hidden={!isOpen}
       inert={!isOpen}
       ref={windowRef}
       onClick={onClick}
-      style={position ? { left: position.x, top: position.y } : undefined}
+      style={{ left, top, width, height }}
     >
       <header className="terminal-window__bar" {...dragHandlers}>
         <div className="terminal-window__controls" role="group" aria-label="Window controls">
@@ -50,6 +62,25 @@ export default function TerminalWindow({ windowState, windowRef, position, dragH
           </button>
         </footer>
       )}
+      {resizeDirections.map((direction) => direction === "se" ? (
+        <button
+          key={direction}
+          className={`terminal-window__resize terminal-window__resize--${direction}`}
+          data-resize-direction={direction}
+          type="button"
+          aria-label="Resize terminal"
+          title="Drag to resize, or use arrow keys (Shift for larger steps)"
+          {...resizeHandlers}
+        />
+      ) : (
+        <span
+          key={direction}
+          className={`terminal-window__resize terminal-window__resize--${direction}`}
+          data-resize-direction={direction}
+          aria-hidden="true"
+          {...resizeHandlers}
+        />
+      ))}
     </section>,
     document.body,
   );

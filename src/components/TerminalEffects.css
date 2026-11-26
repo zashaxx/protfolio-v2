@@ -19,10 +19,7 @@
   top: 0;
   left: 0;
   max-width: none;
-  pointer-events: auto;
-  touch-action: none;
-  cursor: grab;
-  will-change: transform;
+  pointer-events: none;
 }
 
 .terminal-effect--gravity-resting {
@@ -32,10 +29,26 @@
   left: 0;
   max-width: none;
   pointer-events: none;
-  will-change: transform;
 }
 
-.terminal-effect--gravity[data-dragging="true"] {
+.terminal-gravity-input {
+  position: fixed;
+  z-index: 192;
+  inset: 0;
+  touch-action: none;
+  cursor: grab;
+}
+
+.terminal-gravity-blocks {
+  position: fixed;
+  z-index: 191;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.terminal-gravity-input[data-dragging="true"] {
   cursor: grabbing;
 }
 
@@ -105,16 +118,22 @@
   color: var(--background);
   font-family: var(--font-sans);
   white-space: nowrap;
+  opacity: 0;
   box-shadow: 0 10px 24px -12px rgb(0 0 0 / 50%);
   transform: translate(16px, 19px);
   transition:
-    transform 320ms cubic-bezier(0.3, 1.2, 0.4, 1),
-    border-radius 300ms ease;
+    opacity 180ms ease,
+    transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    border-radius 240ms ease;
+}
+
+.terminal-guide__tag.is-talking {
+  opacity: 1;
 }
 
 .terminal-guide.is-up .terminal-guide__tag {
   border-radius: 15px 15px 15px 6px;
-  transform: translate(16px, calc(-100% - 1px));
+  transform: translate(16px, calc(-100% - var(--guide-tag-gap, 1px)));
 }
 
 .terminal-guide.is-left .terminal-guide__tag {
@@ -124,7 +143,7 @@
 
 .terminal-guide.is-up.is-left .terminal-guide__tag {
   border-radius: 15px 15px 6px 15px;
-  transform: translate(calc(-100% - 1px), calc(-100% - 1px));
+  transform: translate(calc(-100% - 1px), calc(-100% - var(--guide-tag-gap, 1px)));
 }
 
 .terminal-guide__name {
@@ -142,9 +161,6 @@
   width: 0;
   height: 0;
   overflow: hidden;
-  transition:
-    width 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    height 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .terminal-guide__text {
@@ -167,7 +183,7 @@
 
 .terminal-guide__char {
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity 110ms ease-out;
 }
 
 .terminal-guide__char.is-on {
@@ -184,7 +200,7 @@
   background: var(--background);
   opacity: 0;
   transition:
-    transform 70ms linear,
+    transform 33ms linear,
     opacity 200ms ease;
 }
 
@@ -213,6 +229,19 @@ html[data-gravity-scene="true"] {
 
 html[data-gravity-scene="true"] [data-terminal-gravity-text] {
   visibility: hidden;
+}
+
+html[data-gravity-scene="true"] [data-terminal-gravity-border-top] {
+  border-top-color: transparent !important;
+}
+
+html[data-gravity-scene="true"] [data-terminal-gravity-border-bottom] {
+  border-bottom-color: transparent !important;
+}
+
+html[data-gravity-scene="true"] [data-terminal-gravity-block],
+html[data-gravity-scene="true"] [data-terminal-gravity-block] * {
+  visibility: hidden !important;
 }
 
 html[data-gravity-scene="true"] .sidebar-nav,

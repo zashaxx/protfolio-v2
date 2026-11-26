@@ -4,12 +4,14 @@ import useMenuFocus from "../../hooks/useMenuFocus";
 import { jumpToTop } from "../../navigation";
 import MobileHeader from "./MobileHeader";
 import MobileMenu from "./MobileMenu";
+import useTerminalSounds from "../useTerminalSounds";
 
 const GuidedTour = lazy(() => import("../TerminalClone"));
 
 export default function MobileNavigation({ pageView, activeSection, onNavigate, soundEnabled, onSoundToggle, theme }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [tourRun, setTourRun] = useState(0);
+  const { playTyping } = useTerminalSounds(soundEnabled);
   const panelRef = useRef(null);
   const tourIdRef = useRef(0);
   const stopTour = useCallback(() => {
@@ -45,6 +47,8 @@ export default function MobileNavigation({ pageView, activeSection, onNavigate, 
       window.requestAnimationFrame(jumpToTop);
       return;
     }
+    // The same player supplies each revealed character after this gesture.
+    playTyping();
     tourIdRef.current += 1;
     setTourRun(tourIdRef.current);
   };
@@ -67,7 +71,7 @@ export default function MobileNavigation({ pageView, activeSection, onNavigate, 
       />
       {tourRun > 0 && (
         <Suspense fallback={null}>
-          <GuidedTour key={tourRun} onExit={stopTour} onMenuChange={setMenuOpen} />
+          <GuidedTour key={tourRun} onExit={stopTour} onMenuChange={setMenuOpen} onType={playTyping} />
         </Suspense>
       )}
       {tourRun > 0 && !menuOpen && (

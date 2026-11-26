@@ -2037,28 +2037,24 @@ main {
 
   .sidebar-toggle {
     position: absolute;
-    top: 1.65rem;
-    right: -14px;
+    top: 18px;
+    right: -52px;
     z-index: 2;
     display: grid;
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     padding: 0;
     place-items: center;
-    border: 1px solid var(--sidebar-line);
-    border-radius: 50%;
-    background: var(--sidebar-surface);
-    color: var(--sidebar-foreground);
+    border: 0;
+    background: transparent;
+    color: var(--ink);
     cursor: pointer;
-    transition:
-      background-color var(--sidebar-duration) var(--sidebar-ease),
-      border-color var(--sidebar-duration) var(--sidebar-ease),
-      color var(--sidebar-duration) var(--sidebar-ease);
+    transition: color var(--sidebar-duration) var(--sidebar-ease);
   }
-  .sidebar-toggle:hover { background: color-mix(in srgb, var(--sidebar-foreground) 9%, var(--sidebar-surface)); }
-  .sidebar-toggle__chevron { transition: transform var(--sidebar-duration) var(--sidebar-ease); }
+  .sidebar-toggle__chevron { pointer-events: none; transition: transform var(--sidebar-duration) var(--sidebar-ease); }
   .is-sidebar-collapsed .sidebar-toggle__chevron { transform: rotate(180deg); }
   .desktop-sidebar :focus-visible { outline-color: var(--sidebar-foreground); outline-offset: 2px; }
+  .desktop-sidebar .sidebar-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
   .brand {
     position: relative;
@@ -2453,6 +2449,7 @@ main {
   }
 
   .sidebar-nav__arrow,
+  .sidebar-toggle__chevron,
   .mobile-menu__arrow {
     transition: none;
   }

@@ -20,7 +20,7 @@ export default function DesktopSidebar({ pageView, activeSection, collapsed, onT
         aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
         title={collapsed ? "Expand navigation" : "Collapse navigation"}
       >
-        <ChevronLeft className="sidebar-toggle__chevron" size={15} strokeWidth={1.8} aria-hidden="true" />
+        <ChevronLeft className="sidebar-toggle__chevron" size={28} strokeWidth={2.4} aria-hidden="true" />
       </button>
       <a
         className="brand"

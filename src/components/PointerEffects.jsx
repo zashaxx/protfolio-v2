@@ -170,6 +170,7 @@ export default function PointerEffects({ soundEnabled = false }) {
     const handlePointerMove = (event) => {
       if (
         !finePointer.matches || event.pointerType === "touch" ||
+        (event.target instanceof Element && event.target.closest(".terminal-window__resize")) ||
         (!hasPopover && document.querySelector("dialog[open]"))
       ) {
         hideCursor();

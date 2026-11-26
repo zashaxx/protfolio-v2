@@ -1,19 +1,16 @@
-import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
-import TerminalGame from "./TerminalGame";
+import { lazy, Suspense, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import TerminalWindow from "./terminal/TerminalWindow";
 import TerminalCommandPanel from "./terminal/TerminalCommandPanel";
 import useTerminalWindow from "../hooks/useTerminalWindow";
 import useTerminalSounds from "./useTerminalSounds";
 
 const commands = ["play", "gravity", "draw", "tour", "coffee"];
-const games = ["runner", "snake", "pong"];
-const gameNames = { runner: "coffee run", snake: "pen tool", pong: "ping" };
+const CommunityLounge = lazy(() => import("./lounge/CommunityLounge"));
 
 export default function TerminalWidget({ activeMode, onModeChange, soundEnabled, onVisibilityChange, windowState, onWindowStateChange, launcherRef, controllerRef }) {
   const isOpen = windowState === "open";
   const [input, setInput] = useState("");
   const [entries, setEntries] = useState([]);
-  const [gameKind, setGameKind] = useState(null);
   const inputRef = useRef(null);
   const caretRef = useRef(null);
   const caretPrefixRef = useRef(null);
@@ -48,7 +45,7 @@ export default function TerminalWidget({ activeMode, onModeChange, soundEnabled,
     appendOutput(`exited /${activeMode}`);
   }, [activeMode, appendOutput, onModeChange]);
 
-  const { position, windowRef, closeTerminal, minimizeTerminal, toggleTerminal, dragHandlers } = useTerminalWindow({
+  const { position, size, windowRef, closeTerminal, minimizeTerminal, toggleTerminal, dragHandlers, resizeHandlers } = useTerminalWindow({
     activeMode, exitMode, playClose, windowState, onWindowStateChange, onVisibilityChange, launcherRef,
   });
 
@@ -102,16 +99,10 @@ export default function TerminalWidget({ activeMode, onModeChange, soundEnabled,
       return;
     }
 
-    let nextGame = gameKind;
-    if (normalized === "play") {
-      const choices = games.filter((game) => game !== gameKind);
-      nextGame = choices[Math.floor(Math.random() * choices.length)];
-      setGameKind(nextGame);
-    }
     onModeChange(normalized);
 
     const responses = {
-      play: `loading ${gameNames[nextGame]}`,
+      play: "opening the lounge. WASD to move · F or click to interact",
       gravity: "gravity on. drag things around",
       draw: "pen out. draw anywhere",
       tour: "starting the guided tour",
@@ -170,19 +161,23 @@ export default function TerminalWidget({ activeMode, onModeChange, soundEnabled,
       windowState={windowState}
       windowRef={windowRef}
       position={position}
+      size={size}
       dragHandlers={dragHandlers}
+      resizeHandlers={resizeHandlers}
       onClose={closeTerminal}
       onMinimize={minimizeTerminal}
       activeMode={activeMode}
       onExitMode={exitMode}
       onClick={(event) => {
-        if (isOpen && !event.target.closest(".terminal-window__control, .terminal-window__resize")) {
+        if (isOpen && activeMode !== "play" && !event.target.closest(".terminal-window__control, .terminal-window__resize")) {
           inputRef.current?.focus({ preventScroll: true });
         }
       }}
     >
-      {activeMode === "play" && gameKind ? (
-        <TerminalGame kind={gameKind} paused={!isOpen} />
+      {activeMode === "play" ? (
+        <Suspense fallback={<div className="terminal-window__game-loading" role="status">Opening the lounge…</div>}>
+          <CommunityLounge paused={!isOpen} soundEnabled={soundEnabled} />
+        </Suspense>
       ) : (
         <TerminalCommandPanel
           bodyRef={bodyRef}

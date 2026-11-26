@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import animateTerminalWindow from "../components/terminalWindowMotion";
+import animateTerminalWindow, { animateTerminalClose } from "../components/terminalWindowMotion";
 
-const TERMINAL_WIDTH = 640;
-const TERMINAL_HEIGHT = 480;
+const TERMINAL_WIDTH = 560;
+const TERMINAL_HEIGHT = 400;
+const MIN_WIDTH = 360;
+const MIN_HEIGHT = 240;
+const MARGIN = 8;
+const clamp = (value, min, max) => Math.min(Math.max(min, value), Math.max(min, max));
 
 export default function useTerminalWindow({ activeMode, exitMode, playClose, windowState, onWindowStateChange, onVisibilityChange, launcherRef }) {
   const isOpen = windowState === "open";
   const [position, setPosition] = useState(null);
-  const dragRef = useRef(null);
+  const [size, setSize] = useState(null);
+  const gestureRef = useRef(null);
+  const gestureFrameRef = useRef(0);
+  const pendingGeometryRef = useRef(null);
   const windowRef = useRef(null);
   const positionRef = useRef(position);
+  const sizeRef = useRef(size);
   const windowStateRef = useRef(windowState);
   const motionRef = useRef(null);
   const motionVersionRef = useRef(0);
@@ -26,7 +34,22 @@ export default function useTerminalWindow({ activeMode, exitMode, playClose, win
     motionRef.current = null;
   }, []);
 
-  useEffect(() => () => cancelMotion(), [cancelMotion]);
+  const finishGesture = useCallback(() => {
+    gestureRef.current = null;
+    window.cancelAnimationFrame(gestureFrameRef.current);
+    gestureFrameRef.current = 0;
+    const next = pendingGeometryRef.current;
+    pendingGeometryRef.current = null;
+    if (next) {
+      setPosition(next.position);
+      if (next.size) setSize(next.size);
+    }
+  }, []);
+
+  useEffect(() => () => {
+    cancelMotion();
+    window.cancelAnimationFrame(gestureFrameRef.current);
+  }, [cancelMotion]);
 
   useEffect(() => {
     positionRef.current = position;
@@ -34,16 +57,25 @@ export default function useTerminalWindow({ activeMode, exitMode, playClose, win
 
   useEffect(() => {
     const handleResize = () => {
+      finishGesture();
       const current = positionRef.current;
       if (!current) return;
       const rect = windowRef.current?.getBoundingClientRect();
-      const width = rect?.width ?? Math.min(TERMINAL_WIDTH, window.innerWidth - 16);
-      const height = rect?.height ?? Math.min(TERMINAL_HEIGHT, window.innerHeight - 16);
-      setPosition({
-        x: Math.min(Math.max(8, current.x), Math.max(8, window.innerWidth - width - 8)),
-        y: Math.min(Math.max(8, current.y), Math.max(8, window.innerHeight - height - 8)),
-      });
-      if (motionRef.current) {
+      const maxWidth = window.innerWidth - MARGIN * 2;
+      const maxHeight = window.innerHeight - MARGIN * 2;
+      const width = clamp(sizeRef.current?.width ?? rect?.width ?? TERMINAL_WIDTH, Math.min(MIN_WIDTH, maxWidth), maxWidth);
+      const height = clamp(sizeRef.current?.height ?? rect?.height ?? TERMINAL_HEIGHT, Math.min(MIN_HEIGHT, maxHeight), maxHeight);
+      const next = {
+        x: clamp(current.x, MARGIN, window.innerWidth - width - MARGIN),
+        y: clamp(current.y, MARGIN, window.innerHeight - height - MARGIN),
+      };
+      positionRef.current = next;
+      setPosition(next);
+      if (sizeRef.current) {
+        sizeRef.current = { width, height };
+        setSize(sizeRef.current);
+      }
+      if (motionRef.current && windowStateRef.current !== "closing") {
         const next = windowStateRef.current === "minimizing" ? "minimized" : "open";
         cancelMotion();
         flushSync(() => {
@@ -55,16 +87,30 @@ export default function useTerminalWindow({ activeMode, exitMode, playClose, win
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [cancelMotion, changeWindowState, onVisibilityChange]);
+  }, [cancelMotion, changeWindowState, finishGesture, onVisibilityChange]);
 
   const closeTerminal = useCallback((withSound = false) => {
+    if (windowStateRef.current !== "open") return;
     if (withSound) playClose();
+    finishGesture();
     cancelMotion();
-    exitMode();
-    onVisibilityChange(false);
-    changeWindowState("closed");
+    const version = motionVersionRef.current;
+    const transition = animateTerminalClose(windowRef.current);
+    motionRef.current = transition;
+    flushSync(() => {
+      changeWindowState("closing");
+      onVisibilityChange(false);
+    });
     launcherRef.current?.focus({ preventScroll: true });
-  }, [cancelMotion, changeWindowState, exitMode, launcherRef, onVisibilityChange, playClose]);
+    void transition.finished.then(() => {
+      if (version !== motionVersionRef.current) return;
+      motionRef.current = null;
+      flushSync(() => {
+        exitMode();
+        changeWindowState("closed");
+      });
+    });
+  }, [cancelMotion, changeWindowState, exitMode, finishGesture, launcherRef, onVisibilityChange, playClose]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -85,13 +131,14 @@ export default function useTerminalWindow({ activeMode, exitMode, playClose, win
     cancelMotion();
     const version = motionVersionRef.current;
     const minimizing = direction === "minimize";
-    const transition = animateTerminalWindow(windowRef.current, launcherRef.current, direction);
-    motionRef.current = transition;
-    // Hand off to the snapshot before the browser can paint another live frame.
+    // Commit the launcher's active geometry before measuring its icon. The
+    // expanded navigation changes padding when aria-expanded changes.
     flushSync(() => {
       changeWindowState(minimizing ? "minimizing" : "restoring");
       onVisibilityChange(false);
     });
+    const transition = animateTerminalWindow(windowRef.current, launcherRef.current, direction);
+    motionRef.current = transition;
     if (minimizing) launcherRef.current.focus({ preventScroll: true });
     void transition.finished.then(() => {
       if (version !== motionVersionRef.current) return;
@@ -116,11 +163,11 @@ export default function useTerminalWindow({ activeMode, exitMode, playClose, win
       return;
     }
     if (!positionRef.current) {
-      const width = Math.min(TERMINAL_WIDTH, window.innerWidth - 16);
-      const height = Math.min(TERMINAL_HEIGHT, window.innerHeight - 16);
+      const width = Math.min(sizeRef.current?.width ?? TERMINAL_WIDTH, window.innerWidth - 16);
+      const height = Math.min(sizeRef.current?.height ?? TERMINAL_HEIGHT, window.innerHeight - 16);
       const next = {
-        x: Math.max(8, window.innerWidth - width - 24),
-        y: Math.max(8, window.innerHeight - height - 24),
+        x: Math.max(MARGIN, (window.innerWidth - width) / 2),
+        y: Math.max(MARGIN, (window.innerHeight - height) / 2),
       };
       positionRef.current = next;
       setPosition(next);
@@ -131,48 +178,95 @@ export default function useTerminalWindow({ activeMode, exitMode, playClose, win
 
   const minimizeTerminal = () => {
     if (windowStateRef.current !== "open") return;
-    dragRef.current = null;
+    finishGesture();
     transitionWindow("minimize");
   };
 
-  const startDrag = (event) => {
-    if (!isOpen || event.button !== 0 || event.target.closest("button")) return;
+  const queueGeometry = (next) => {
+    positionRef.current = next.position;
+    if (next.size) sizeRef.current = next.size;
+    pendingGeometryRef.current = next;
+    if (gestureFrameRef.current) return;
+    gestureFrameRef.current = window.requestAnimationFrame(() => {
+      gestureFrameRef.current = 0;
+      const pending = pendingGeometryRef.current;
+      pendingGeometryRef.current = null;
+      if (!pending) return;
+      setPosition(pending.position);
+      if (pending.size) setSize(pending.size);
+    });
+  };
+
+  const startGesture = (event, direction = null) => {
+    if (!isOpen || event.button !== 0 || (!direction && event.target.closest("button"))) return;
     event.preventDefault();
+    event.stopPropagation();
     const rect = windowRef.current?.getBoundingClientRect();
     if (!rect) return;
-    dragRef.current = {
+    gestureRef.current = {
       pointerId: event.pointerId,
-      offsetX: event.clientX - rect.left,
-      offsetY: event.clientY - rect.top,
+      direction, x: event.clientX, y: event.clientY,
+      left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom,
+      width: rect.width, height: rect.height,
+      viewportWidth: window.innerWidth, viewportHeight: window.innerHeight,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const moveDrag = (event) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    const rect = windowRef.current?.getBoundingClientRect();
-    const width = rect?.width ?? TERMINAL_WIDTH;
-    const height = rect?.height ?? TERMINAL_HEIGHT;
-    const next = {
-      x: Math.min(Math.max(8, event.clientX - drag.offsetX), Math.max(8, window.innerWidth - width - 8)),
-      y: Math.min(Math.max(8, event.clientY - drag.offsetY), Math.max(8, window.innerHeight - height - 8)),
-    };
-    positionRef.current = next;
-    setPosition(next);
+  const moveGesture = (event) => {
+    const gesture = gestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
+    if (!gesture.direction) {
+      queueGeometry({ position: {
+        x: clamp(gesture.left + dx, MARGIN, gesture.viewportWidth - gesture.width - MARGIN),
+        y: clamp(gesture.top + dy, MARGIN, gesture.viewportHeight - gesture.height - MARGIN),
+      } });
+      return;
+    }
+    let { left, top, right, bottom } = gesture;
+    const minWidth = Math.min(MIN_WIDTH, gesture.viewportWidth - MARGIN * 2);
+    const minHeight = Math.min(MIN_HEIGHT, gesture.viewportHeight - MARGIN * 2);
+    if (gesture.direction.includes("e")) right = clamp(right + dx, left + minWidth, gesture.viewportWidth - MARGIN);
+    if (gesture.direction.includes("s")) bottom = clamp(bottom + dy, top + minHeight, gesture.viewportHeight - MARGIN);
+    if (gesture.direction.includes("w")) left = clamp(left + dx, MARGIN, right - minWidth);
+    queueGeometry({ position: { x: left, y: top }, size: { width: right - left, height: bottom - top } });
   };
 
-  const stopDrag = (event) => {
-    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
+  const stopGesture = (event) => {
+    if (gestureRef.current?.pointerId !== event.pointerId) return;
+    finishGesture();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
+  const resizeWithKeyboard = (event) => {
+    if (!isOpen || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    const rect = windowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 40 : 10;
+    queueGeometry({ position: { x: rect.left, y: rect.top }, size: {
+      width: clamp(rect.width + (event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0), Math.min(MIN_WIDTH, window.innerWidth - 16), window.innerWidth - rect.left - MARGIN),
+      height: clamp(rect.height + (event.key === "ArrowDown" ? step : event.key === "ArrowUp" ? -step : 0), Math.min(MIN_HEIGHT, window.innerHeight - 16), window.innerHeight - rect.top - MARGIN),
+    } });
   };
 
   return {
-    position, windowRef, closeTerminal, minimizeTerminal, toggleTerminal,
+    position, size, windowRef, closeTerminal, minimizeTerminal, toggleTerminal,
     dragHandlers: {
-      onPointerDown: startDrag,
-      onPointerMove: moveDrag,
-      onPointerUp: stopDrag,
-      onPointerCancel: stopDrag,
+      onPointerDown: (event) => startGesture(event),
+      onPointerMove: moveGesture,
+      onPointerUp: stopGesture,
+      onPointerCancel: stopGesture,
+      onLostPointerCapture: stopGesture,
+    },
+    resizeHandlers: {
+      onPointerDown: (event) => startGesture(event, event.currentTarget.dataset.resizeDirection),
+      onPointerMove: moveGesture,
+      onPointerUp: stopGesture,
+      onPointerCancel: stopGesture,
+      onLostPointerCapture: stopGesture,
+      onKeyDown: resizeWithKeyboard,
     },
   };
 }

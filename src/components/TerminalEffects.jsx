@@ -10,10 +10,10 @@ function GravityEffect({ onExit }) {
   return null;
 }
 
-export default function TerminalEffects({ mode, onExit }) {
+export default function TerminalEffects({ mode, onExit, onType }) {
   if (mode === "draw") return <DrawEffect />;
   if (mode === "gravity") return <GravityEffect onExit={onExit} />;
-  if (mode === "tour") return <TerminalClone onExit={onExit} />;
+  if (mode === "tour") return <TerminalClone onExit={onExit} onType={onType} />;
   if (mode === "coffee") return <TerminalCoffee />;
   return null;
 }

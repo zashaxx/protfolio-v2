@@ -1,10 +1,12 @@
 import Matter from "matter-js";
 import { measureScene, textFragments } from "./terminalGravityScene";
+import createGravityBlocks from "./terminalGravityBlocks";
 
 const { Bodies, Body, Bounds, Composite, Engine, Events, Mouse, MouseConstraint, Sleeping } = Matter;
 const STEP = 1000 / 60;
 const MAX_STEPS = 2;
-const MAX_CANVAS_PIXELS = 3_000_000;
+const MAX_CANVAS_PIXELS = 2_000_000;
+const MAX_BODIES = 280;
 let finishPreviousScene = null;
 
 export default function startGravity(onViewportChange) {
@@ -19,18 +21,22 @@ export default function startGravity(onViewportChange) {
   const ratio = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(MAX_CANVAS_PIXELS / (width * height)));
   const canvas = document.createElement("canvas");
   canvas.className = "terminal-effect terminal-effect--gravity";
-  canvas.setAttribute("aria-label", "Gravity scene. Drag letters and blocks. Escape restores the page.");
+  canvas.setAttribute("aria-label", "Gravity scene. Drag letters, blocks, and divider lines. Escape restores the page.");
   canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
   canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
   const context = canvas.getContext("2d");
   if (!context) return () => {};
+  const input = document.createElement("div");
+  input.className = "terminal-gravity-input";
+  input.setAttribute("aria-hidden", "true");
 
   const roots = [main, document.querySelector(".desktop-sidebar")].filter(Boolean);
-  const { blocks, runs } = measureScene(roots, width, height);
-  const bodyBudget = Math.min(420, Math.max(220, Math.round(width * height / 4000)));
-  const fragments = textFragments(runs, Math.max(1, bodyBudget - blocks.length));
+  const { blocks, runs, dividers } = measureScene(roots, width, height);
+  const bodyBudget = Math.min(MAX_BODIES, Math.max(140, Math.round(width * height / 5000)));
+  const fragments = textFragments(runs, Math.max(1, bodyBudget - blocks.length - dividers.length));
   const textSources = new Set(fragments.map((fragment) => fragment.source));
-  const engine = Engine.create({ enableSleeping: true, positionIterations: 6, velocityIterations: 4 });
+  const blockLayer = createGravityBlocks(blocks, dividers);
+  const engine = Engine.create({ enableSleeping: true, positionIterations: 4, velocityIterations: 3 });
   engine.gravity.y = 1.1;
   const items = [];
   const touching = new Set();
@@ -63,6 +69,15 @@ export default function startGravity(onViewportChange) {
     Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.025);
     items.push({ ...block, kind: "block", origin, body });
   }
+  for (const divider of dividers) {
+    const origin = { x: divider.rect.left + divider.rect.width / 2, y: divider.rect.top + divider.rect.height / 2 };
+    const body = Bodies.rectangle(origin.x, origin.y, divider.rect.width, Math.max(3, divider.rect.height), {
+      restitution: 0.08, friction: 0.65, frictionStatic: 0.9, frictionAir: 0.025, sleepThreshold: 28, slop: 0.1,
+    });
+    Body.setMass(body, 1.5);
+    Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.018);
+    items.push({ ...divider, kind: "divider", origin, body });
+  }
   items.sort((a, b) => a.origin.y - b.origin.y || a.origin.x - b.origin.x);
   for (const item of items) {
     item.previousX = item.displayX = item.body.position.x;
@@ -72,7 +87,7 @@ export default function startGravity(onViewportChange) {
     item.wasSleeping = false;
     item.quietFrames = 0;
     item.restX = item.body.position.x; item.restY = item.body.position.y; item.restAngle = item.body.angle;
-    item.radius = Math.hypot(item.kind === "block" ? item.rect.width : item.width, item.kind === "block" ? item.rect.height : item.size) / 2;
+    item.radius = Math.hypot(item.kind === "glyph" ? item.width : item.rect.width, item.kind === "glyph" ? item.size : item.rect.height) / 2;
   }
 
   // One atlas shares a single backing surface instead of hundreds of tiny
@@ -117,6 +132,7 @@ export default function startGravity(onViewportChange) {
   buildAtlas();
 
   const bounds = terminal.getBoundingClientRect();
+  let terminalWidth = bounds.width, terminalHeight = bounds.height;
   const staticOptions = { isStatic: true, collisionFilter: { category: 2, mask: 1 } };
   const windowBody = Bodies.rectangle(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2, bounds.width, bounds.height, staticOptions);
   const walls = [
@@ -131,19 +147,21 @@ export default function startGravity(onViewportChange) {
     launcherBounds.top + launcherBounds.height / 2, launcherBounds.width, launcherBounds.height, staticOptions));
   // Leave the launcher visible and clickable through the drag surface.
   const launcherCutout = `path(evenodd, "M0 0H${width}V${height}H0Z M${launcherBounds.left} ${launcherBounds.top}V${launcherBounds.bottom}H${launcherBounds.right}V${launcherBounds.top}Z")`;
-  canvas.style.clipPath = settledLayer.style.clipPath = launcherCutout;
-  document.body.appendChild(canvas);
-  const mouse = Mouse.create(canvas);
-  mouse.pixelRatio = ratio;
+  // Mask only the empty hit target. Masking full-screen canvas pixels forces
+  // expensive offscreen rasterization on browsers without GPU acceleration.
+  input.style.clipPath = launcherCutout;
+  document.body.append(canvas, input);
+  const mouse = Mouse.create(input);
   const constraint = MouseConstraint.create(engine, { mouse, collisionFilter: { mask: 1 },
     constraint: { stiffness: 0.2, damping: 0.12, render: { visible: false } } });
   Composite.add(engine.world, [...items.map((item) => item.body), ...walls, constraint]);
-  Events.on(constraint, "startdrag", () => { canvas.dataset.dragging = "true"; });
-  Events.on(constraint, "enddrag", () => { delete canvas.dataset.dragging; });
+  Events.on(constraint, "startdrag", () => { input.dataset.dragging = "true"; });
+  Events.on(constraint, "enddrag", () => { delete input.dataset.dragging; });
 
   let frame = 0, last = 0, accumulator = STEP, stopped = false, finished = false;
   let windowDirty = false, themeDirty = false;
   const refreshBitmaps = () => {
+    blockLayer.refreshTheme();
     const colors = new Map();
     for (const source of textSources) colors.set(source, getComputedStyle(source).color);
     for (const item of items) {
@@ -176,7 +194,7 @@ export default function startGravity(onViewportChange) {
   };
   const paintItem = (item, x, y, angle, scale = 1) => {
     item.displayX = x; item.displayY = y; item.displayAngle = angle;
-    if (item.kind === "block") {
+    if (item.kind !== "glyph") {
       if (Math.abs(x - item.lastX) < 0.02 && Math.abs(y - item.lastY) < 0.02 && Math.abs(angle - item.lastAngle) < 0.0001 && scale === 1) return;
       const base = item.baseTransform === "none" ? "" : item.baseTransform;
       item.element.style.transform = `translate3d(${x - item.origin.x}px, ${y - item.origin.y}px, 0) rotate(${angle}rad) scale(${scale}) ${base}`;
@@ -226,6 +244,11 @@ export default function startGravity(onViewportChange) {
   const updateTerminalBounds = () => {
     const rect = terminal.getBoundingClientRect();
     const previous = { min: { ...windowBody.bounds.min }, max: { ...windowBody.bounds.max } };
+    const nextWidth = Math.max(1, rect.width), nextHeight = Math.max(1, rect.height);
+    if (nextWidth !== terminalWidth || nextHeight !== terminalHeight) {
+      Body.scale(windowBody, nextWidth / terminalWidth, nextHeight / terminalHeight);
+      terminalWidth = nextWidth; terminalHeight = nextHeight;
+    }
     Body.setPosition(windowBody, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
     for (const item of items) {
       if (item.body.isSleeping && (Bounds.overlaps(item.body.bounds, previous) || Bounds.overlaps(item.body.bounds, windowBody.bounds))) Sleeping.set(item.body, false);
@@ -294,27 +317,30 @@ export default function startGravity(onViewportChange) {
   };
   const windowObserver = new MutationObserver(() => { windowDirty = true; wake(); });
   windowObserver.observe(terminal, { attributes: true, attributeFilter: ["style"] });
+  const windowResizeObserver = typeof ResizeObserver === "undefined" ? null
+    : new ResizeObserver(() => { windowDirty = true; wake(); });
+  windowResizeObserver?.observe(terminal);
   const themeObserver = new MutationObserver(() => { themeDirty = true; wake(); });
   themeObserver.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-  canvas.addEventListener("pointerdown", wake);
-  canvas.addEventListener("pointermove", dragMove, { passive: true });
+  input.addEventListener("pointerdown", wake);
+  input.addEventListener("pointermove", dragMove, { passive: true });
   window.addEventListener("mouseup", release);
   window.addEventListener("blur", release);
   document.addEventListener("visibilitychange", visibilityChanged);
 
   for (const block of blocks) {
-    block.element.style.transition = "none"; block.element.style.willChange = "transform";
-    block.element.setAttribute("data-terminal-gravity-block", "");
+    block.source.setAttribute("data-terminal-gravity-block", "");
   }
+  for (const divider of dividers) divider.source.setAttribute(`data-terminal-gravity-border-${divider.side}`, "");
   textSources.forEach((source) => source.setAttribute("data-terminal-gravity-text", ""));
   root.dataset.gravityScene = "true";
 
   const stopSimulation = () => {
-    cancelAnimationFrame(frame); frame = 0; windowObserver.disconnect();
-    canvas.removeEventListener("pointerdown", wake); canvas.removeEventListener("pointermove", dragMove);
-    canvas.removeEventListener("mousemove", mouse.mousemove); canvas.removeEventListener("mousedown", mouse.mousedown);
-    canvas.removeEventListener("mouseup", mouse.mouseup); canvas.removeEventListener("wheel", mouse.mousewheel);
-    canvas.removeEventListener("touchmove", mouse.mousemove); canvas.removeEventListener("touchstart", mouse.mousedown); canvas.removeEventListener("touchend", mouse.mouseup);
+    cancelAnimationFrame(frame); frame = 0; windowObserver.disconnect(); windowResizeObserver?.disconnect();
+    input.removeEventListener("pointerdown", wake); input.removeEventListener("pointermove", dragMove);
+    input.removeEventListener("mousemove", mouse.mousemove); input.removeEventListener("mousedown", mouse.mousedown);
+    input.removeEventListener("mouseup", mouse.mouseup); input.removeEventListener("wheel", mouse.mousewheel);
+    input.removeEventListener("touchmove", mouse.mousemove); input.removeEventListener("touchstart", mouse.mousedown); input.removeEventListener("touchend", mouse.mouseup);
     window.removeEventListener("mouseup", release); window.removeEventListener("blur", release);
     Mouse.clearSourceEvents(mouse); Events.off(engine); Events.off(constraint);
     Composite.clear(engine.world, false); Engine.clear(engine);
@@ -327,15 +353,10 @@ export default function startGravity(onViewportChange) {
     document.removeEventListener("visibilitychange", visibilityChanged);
     textSources.forEach((source) => source.removeAttribute("data-terminal-gravity-text"));
     for (const block of blocks) {
-      block.element.style.transform = block.saved.transform;
-      block.element.style.willChange = block.saved.willChange;
-      block.element.removeAttribute("data-terminal-gravity-block");
+      block.source.removeAttribute("data-terminal-gravity-block");
     }
-    canvas.remove(); settledLayer.remove(); delete root.dataset.gravityScene;
-    // Commit the restored layout with transitions disabled, including when the
-    // terminal closes before the return animation can run.
-    void root.offsetWidth;
-    for (const block of blocks) block.element.style.transition = block.saved.transition;
+    for (const divider of dividers) divider.source.removeAttribute(`data-terminal-gravity-border-${divider.side}`);
+    canvas.remove(); settledLayer.remove(); input.remove(); blockLayer.remove(); delete root.dataset.gravityScene;
     atlas.width = atlas.height = settledLayer.width = settledLayer.height = 0;
     fontMetrics.clear();
     if (finishPreviousScene === finish) finishPreviousScene = null;
@@ -353,7 +374,7 @@ export default function startGravity(onViewportChange) {
     stopped = true; stopSimulation();
     const shouldAnimate = terminal.isConnected && launcher.isConnected && !document.hidden && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!shouldAnimate) { finish(); return; }
-    canvas.style.pointerEvents = "none";
+    input.remove();
     const states = items.map((item, index) => ({ item, x: item.displayX, y: item.displayY,
       angle: Math.atan2(Math.sin(item.displayAngle), Math.cos(item.displayAngle)), delay: index / Math.max(1, items.length) * 260 }));
     const start = performance.now();

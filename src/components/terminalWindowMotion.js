@@ -18,13 +18,13 @@ function projectStrip(left, right, width, height) {
 function makeSnapshot(source, rect) {
   const snapshot = source.cloneNode(true);
   const style = getComputedStyle(source);
-  snapshot.className = "terminal-motion__snapshot";
+  snapshot.className = "terminal-window terminal-motion__snapshot";
   snapshot.removeAttribute("data-window-state");
   snapshot.removeAttribute("role");
   snapshot.style.cssText = "";
   Object.assign(snapshot.style, {
     position: "absolute", top: "0", width: `${rect.width}px`, height: `${rect.height}px`,
-    minHeight: "0", maxHeight: "none", margin: "0", boxSizing: "border-box",
+    minWidth: "0", minHeight: "0", maxWidth: "none", maxHeight: "none", margin: "0", boxSizing: "border-box",
     display: "flex", flexDirection: "column", overflow: "hidden",
     visibility: "visible", opacity: "1", transform: "none", animation: "none", transition: "none",
     border: style.border, borderRadius: style.borderRadius, background: style.background,
@@ -63,6 +63,42 @@ function makeSnapshot(source, rect) {
   return snapshot;
 }
 
+// Closing only needs one composited surface; keep the live contents in place
+// until this short fade completes instead of building a funnel snapshot.
+export function animateTerminalClose(source) {
+  const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (motion.matches || !source?.isConnected || document.hidden) {
+    return { finished: Promise.resolve(true), cancel() {} };
+  }
+  let animation = null, settled = false, resolve;
+  const finished = new Promise((done) => { resolve = done; });
+  const finish = (completed) => {
+    if (settled) return;
+    settled = true;
+    document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("pagehide", cancel);
+    motion.removeEventListener("change", onMotion);
+    animation?.cancel();
+    resolve(completed);
+  };
+  const cancel = () => finish(false);
+  const onVisibility = () => { if (document.hidden) finish(true); };
+  const onMotion = () => { if (motion.matches) finish(true); };
+  document.addEventListener("visibilitychange", onVisibility);
+  window.addEventListener("pagehide", cancel);
+  motion.addEventListener("change", onMotion);
+  try {
+    animation = source.animate([
+      { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)" },
+      { opacity: 0, transform: "translate3d(0, 10px, 0) scale(0.96)" },
+    ], { duration: 200, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "both" });
+    void animation.finished.then(() => finish(true), cancel);
+  } catch {
+    finish(false);
+  }
+  return { finished, cancel };
+}
+
 /**
  * Animate a frozen window into its navigation icon, or reverse that same path.
  * The caller owns the real window's visibility and open/minimized state.
@@ -77,7 +113,6 @@ export default function animateTerminalWindow(source, launcher, direction = "min
   const rect = source.getBoundingClientRect();
   const icon = launcher.querySelector(".sidebar-nav__icon") ?? launcher;
   const dock = icon.getBoundingClientRect();
-  const launcherBounds = launcher.getBoundingClientRect();
   if (!rect.width || !rect.height || !dock.width || !dock.height) {
     return { finished: Promise.resolve(false), cancel() {} };
   }
@@ -169,12 +204,12 @@ export default function animateTerminalWindow(source, launcher, direction = "min
     if (!source.isConnected || !launcher.isConnected) cancel();
   });
   const launcherObserver = new ResizeObserver(() => {
-    const current = launcher.getBoundingClientRect();
-    if (Math.abs(current.width - launcherBounds.width) > 0.5
-      || Math.abs(current.height - launcherBounds.height) > 0.5) cancel();
+    const current = icon.getBoundingClientRect();
+    if (Math.abs(current.width - dock.width) > 0.5
+      || Math.abs(current.height - dock.height) > 0.5) cancel();
   });
   observer.observe(document.body, { childList: true, subtree: true });
-  launcherObserver.observe(launcher);
+  launcherObserver.observe(icon);
   window.addEventListener("resize", cancel);
   window.addEventListener("pagehide", cancel);
   document.addEventListener("visibilitychange", onVisibility);

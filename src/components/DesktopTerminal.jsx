@@ -19,11 +19,17 @@ function TerminalNavigation({ sidebarCollapsed, soundEnabled }) {
   const controllerRef = useRef(null);
   const pendingToggleRef = useRef(false);
   const isOpen = windowState === "open";
+  const isTransitioning = ["minimizing", "restoring", "closing"].includes(windowState);
+  // The expanded nav sizes this button to its contents and active padding.
+  // Keep that geometry until the funnel has reached its icon target.
+  const launcherActive = isOpen || isTransitioning;
   const launcherLabel = isOpen
     ? "Minimize terminal"
-    : windowState === "closed"
-      ? "Open terminal"
-      : "Restore terminal";
+    : windowState === "closing"
+      ? "Closing terminal"
+      : windowState === "closed"
+        ? "Open terminal"
+        : "Restore terminal";
 
   const connectTerminal = useCallback((controller) => {
     controllerRef.current = controller;
@@ -49,14 +55,14 @@ function TerminalNavigation({ sidebarCollapsed, soundEnabled }) {
     <div className="terminal-widget">
       <button
         ref={launcherRef}
-        className={`terminal-widget__launcher sidebar-nav__terminal${isOpen ? " is-active" : ""}${windowState === "minimized" ? " is-minimized" : ""}`}
+        className={`terminal-widget__launcher sidebar-nav__terminal${launcherActive ? " is-active" : ""}${windowState === "minimized" ? " is-minimized" : ""}`}
         style={{ "--nav-index": 6 }}
         type="button"
         onClick={toggleTerminal}
         aria-label={launcherLabel}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        aria-busy={loading || windowState === "minimizing" || windowState === "restoring"}
+        aria-busy={loading || isTransitioning}
         title={sidebarCollapsed ? launcherLabel : undefined}
       >
         <Terminal className="sidebar-nav__icon" size={14} strokeWidth={1.6} aria-hidden="true" />
