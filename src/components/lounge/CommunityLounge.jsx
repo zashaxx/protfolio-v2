@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Maximize2, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Maximize2, Volume2, VolumeX } from "lucide-react";
 import { createLoungeAudio } from "./loungeAudio";
 import { cameraFor, loadLoungeAssets, renderLounge } from "./loungeRenderer";
-import { createLoungeWorld, interact, loungeSnapshot, pathTo, ROOM_OBJECTS, standUp, updateLounge, walkToObject } from "./loungeWorld";
+import { createLoungeWorld, interact, interactiveTargets, loungeSnapshot, pathTo, standUp, updateLounge, walkToObject } from "./loungeWorld";
 import "./CommunityLounge.css";
 
 const directions = { KeyW: "up", KeyA: "left", KeyS: "down", KeyD: "right", ArrowUp: "up", ArrowLeft: "left", ArrowDown: "down", ArrowRight: "right" };
@@ -16,7 +16,6 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
   const audioRef = useRef(null);
   const [ui, setUi] = useState(initialUi);
   const [soundPreference, setSoundPreference] = useState(null);
-  const [guideOpen, setGuideOpen] = useState(false);
   const [retry, setRetry] = useState(0);
   const soundOn = soundPreference ?? soundEnabled;
 
@@ -49,9 +48,12 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
     };
     const focus = () => canvas.focus({ preventScroll: true });
     const unlock = () => { void audio.unlock(); };
-    const action = () => { unlock(); play(interact(state)); focus(); };
+    const action = () => {
+      if (suspended || !assets || document.hidden) return;
+      unlock(); play(interact(state)); focus();
+    };
     const visit = (id) => {
-      const object = state.objects.find((o) => o.id === id);
+      const object = interactiveTargets(state).find((o) => o.id === id);
       if (!object || suspended || !assets) return;
       unlock(); play(walkToObject(state, object)); focus();
     };
@@ -112,8 +114,7 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
       if (state.player.seated) { play(interact(state)); return; }
       const bounds = canvas.getBoundingClientRect(), camera = cameraFor(state, width, height);
       const point = { x: event.clientX - bounds.left + camera.x, y: event.clientY - bounds.top + camera.y };
-      const object = state.objects.filter((o) => o.interactive
-        && point.x >= o.x - 5 && point.x <= o.x + o.w + 5
+      const object = interactiveTargets(state).filter((o) => point.x >= o.x - 5 && point.x <= o.x + o.w + 5
         && point.y >= o.y - 12 && point.y <= o.y + o.h + 6)
         .sort((a, b) => b.y + b.h - a.y - a.h)[0];
       if (object) visit(object.id);
@@ -127,14 +128,13 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
     const cursor = (event) => {
       const bounds = canvas.getBoundingClientRect(), camera = cameraFor(state, width, height);
       const x = event.clientX - bounds.left + camera.x, y = event.clientY - bounds.top + camera.y;
-      canvas.style.cursor = state.objects.some((o) => o.interactive && x >= o.x - 5 && x <= o.x + o.w + 5
+      canvas.style.cursor = interactiveTargets(state).some((o) => x >= o.x - 5 && x <= o.x + o.w + 5
         && y >= o.y - 12 && y <= o.y + o.h + 6) ? "pointer" : "crosshair";
     };
     const theme = () => { dark = document.documentElement.dataset.theme === "dark"; draw(); };
     controlsRef.current = {
       action, visit, setPaused,
       key(direction, down) { unlock(); if (down) keys.add(direction); else keys.delete(direction); },
-      clearKeys,
     };
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
@@ -192,63 +192,18 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
   };
 
   return (
-    <div className="community-lounge" ref={rootRef} data-loaded={!ui.loading && !ui.error}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && guideOpen) {
-          event.preventDefault(); event.stopPropagation(); setGuideOpen(false);
-          canvasRef.current?.focus({ preventScroll: true });
-        }
-      }}>
-      <header className="community-lounge__header">
-        <div className="community-lounge__identity">
-          <span className="community-lounge__eyebrow">a little space to do nothing</span>
-          <h2>the break room<span aria-hidden="true">.</span></h2>
-        </div>
-        <div className="community-lounge__tools">
-          <button type="button" title="Room guide" aria-label="Room guide" aria-expanded={guideOpen}
-            aria-controls="lounge-guide" onClick={() => { controlsRef.current?.clearKeys(); setGuideOpen(!guideOpen); }}>
-            <BookOpen size={15} strokeWidth={1.6} />
-          </button>
-          <button type="button" title={soundOn ? "Mute room sounds" : "Enable room sounds"}
-            aria-label={soundOn ? "Mute room sounds" : "Enable room sounds"} aria-pressed={soundOn} onClick={toggleSound}>
-            {soundOn ? <Volume2 size={15} strokeWidth={1.6} /> : <VolumeX size={15} strokeWidth={1.6} />}
-          </button>
-          <button type="button" title="Toggle fullscreen" aria-label="Toggle room fullscreen" onClick={fullscreen}>
-            <Maximize2 size={14} strokeWidth={1.6} />
-          </button>
-        </div>
-      </header>
-      <div className="community-lounge__meta">
-        <span><i aria-hidden="true" /> single player <span className="community-lounge__meta-extra">· two little bots</span></span>
-        <span>{ui.discovered}/{ui.total} discovered</span>
-      </div>
+    <div className="community-lounge" ref={rootRef} data-loaded={!ui.loading && !ui.error}>
       <div className="community-lounge__viewport">
         <div className="community-lounge__fade">
           <canvas ref={canvasRef} className="community-lounge__canvas" tabIndex={0} role="application"
-            aria-label="Pixel break room. Use W A S D or arrow keys to move. F to interact nearby. Click furniture to walk over and use it. Escape exits."
+            aria-label="Pixel break room. Use W A S D or arrow keys to move. F to interact nearby. Click furniture or Motu to walk over and interact. Escape exits."
             aria-describedby="lounge-status lounge-controls" />
         </div>
-        {ui.music && <span className="community-lounge__now-playing"><span aria-hidden="true">♫</span> a little time off {soundOn ? "· playing" : "· muted"}</span>}
         {(ui.loading || ui.error) && <div className="community-lounge__loading" role="status">
           <span className="community-lounge__loading-pixel" aria-hidden="true" />
-          <p>{ui.error ? "the room couldn't load." : "making a little room for you…"}</p>
+          <p>{ui.error ? "the room couldn't load." : "loading…"}</p>
           {ui.error && <button type="button" onClick={() => setRetry((n) => n + 1)}>try again</button>}
         </div>}
-        {guideOpen && <section className="community-lounge__guide" id="lounge-guide" aria-label="Room guide">
-          <div className="community-lounge__guide-heading"><span>make yourself at home</span>
-            <button type="button" aria-label="Close room guide" onClick={() => { setGuideOpen(false); canvasRef.current?.focus(); }}><X size={15} /></button>
-          </div>
-          <p>Click a place to walk over. F or left click to use it.</p>
-          <div className="community-lounge__places">
-            {ROOM_OBJECTS.filter((o) => o.interactive).map((object, i) => (
-              <button type="button" key={object.id} disabled={ui.loading || ui.error}
-                onClick={() => { controlsRef.current?.visit(object.id); setGuideOpen(false); }}>
-                <span>{String(i + 1).padStart(2, "0")}</span>{object.label}<span aria-hidden="true">↗</span>
-              </button>
-            ))}
-          </div>
-          <small>just you, two local bots, and a well-earned break.</small>
-        </section>}
         <div className="community-lounge__touch" aria-label="Touch movement controls">
           {touchDirections.map(([direction, Icon]) => <button type="button" key={direction} data-direction={direction}
             aria-label={`Move ${direction}`} onPointerDown={(event) => directionPointer(event, direction, true)}
@@ -258,16 +213,23 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
             <Icon size={16} />
           </button>)}
         </div>
-        {!ui.loading && !ui.error && <button className="community-lounge__interact" type="button"
-          disabled={!ui.nearest || ui.walking} onClick={() => controlsRef.current?.action()}>
-          <kbd>F</kbd><span>{ui.walking ? "on my way…" : ui.action}</span>
+        {!ui.loading && !ui.error && ui.nearest && !ui.walking && <button className="community-lounge__interact" type="button"
+          onClick={() => controlsRef.current?.action()}>
+          <kbd>F</kbd><span>{ui.action}</span>
         </button>}
       </div>
       <div className="community-lounge__status" id="lounge-status" role="status" aria-live="polite" aria-atomic="true">{ui.message}</div>
       <footer className="community-lounge__controls" id="lounge-controls">
-        <span><kbd>W</kbd><span className="community-lounge__key-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> move</span>
-        <span><kbd>F</kbd><span className="community-lounge__or">/</span> LMB interact</span>
-        <span className="community-lounge__controls-note">take your time.</span>
+        <span><kbd>W</kbd><span className="community-lounge__key-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> to move</span>
+        <div className="community-lounge__tools">
+          <button type="button" title={soundOn ? "Mute room sounds" : "Enable room sounds"}
+            aria-label={soundOn ? "Mute room sounds" : "Enable room sounds"} aria-pressed={soundOn} onClick={toggleSound}>
+            {soundOn ? <Volume2 size={15} strokeWidth={1.6} /> : <VolumeX size={15} strokeWidth={1.6} />}
+          </button>
+          <button type="button" title="Toggle fullscreen" aria-label="Toggle room fullscreen" onClick={fullscreen}>
+            <Maximize2 size={14} strokeWidth={1.6} />
+          </button>
+        </div>
       </footer>
     </div>
   );

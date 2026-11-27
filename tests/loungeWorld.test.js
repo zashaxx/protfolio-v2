@@ -1,15 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canStand, createLoungeWorld, interact, ROOM_OBJECTS, standUp, updateLounge, walkToObject } from "../src/components/lounge/loungeWorld.js";
+import { canStand, createLoungeWorld, interact, interactiveTargets, loungeSnapshot, nearestObject, ROOM_OBJECTS, standUp, updateLounge, walkToObject } from "../src/components/lounge/loungeWorld.js";
 
 const noKeys = new Set();
-const interactables = ROOM_OBJECTS.filter((o) => o.interactive);
+const interactables = interactiveTargets(createLoungeWorld());
 function arrive(state, object) {
-  walkToObject(state, object);
+  const events = walkToObject(state, object);
   for (let i = 0; i < 2400 && (state.path.length || state.pending); i++) {
-    updateLounge(state, 1 / 60, noKeys);
+    events.push(...updateLounge(state, 1 / 60, noKeys));
     if (!state.player.seated) assert.ok(canStand(state.player.x, state.player.y), "route must stay on walkable floor");
   }
+  return events;
 }
 
 test("every object is reachable from every other object without crossing furniture", () => {
@@ -101,4 +102,49 @@ test("WASD cancels click navigation and discovering the same object counts once"
   interact(state, music);
   assert.equal(state.music, false);
   assert.equal(state.used.size, 1);
+});
+
+test("Motu is reachable by click navigation and triggers her audio on arrival", () => {
+  const state = createLoungeWorld();
+  const motu = interactiveTargets(state).find((target) => target.id === "motu");
+  const npc = state.npcs.find((character) => character.id === "motu");
+  assert.equal(state.npcs.length, 3);
+  assert.equal(motu.label, "Motu");
+  assert.equal(motu.x + motu.w / 2, npc.x);
+  assert.equal(motu.y + motu.h, npc.y);
+  assert.ok(arrive(state, motu).includes("motu"));
+  assert.equal(state.pending, null);
+  assert.equal(nearestObject(state).id, "motu");
+  assert.equal(loungeSnapshot(state).action, "talk to Motu");
+  assert.equal(loungeSnapshot(state).total, ROOM_OBJECTS.filter((object) => object.interactive).length + 1);
+});
+
+test("Motu only plays nearby, debounces repeated interaction, and stays in place", () => {
+  const state = createLoungeWorld();
+  const motu = interactiveTargets(state).find((target) => target.id === "motu");
+  const npc = state.npcs.find((character) => character.id === "motu");
+  const position = { x: npc.x, y: npc.y };
+  assert.deepEqual(interact(state, motu), []);
+  assert.equal(state.used.has("motu"), false);
+  arrive(state, motu);
+  assert.deepEqual(interact(state), []);
+  updateLounge(state, 0.5, noKeys);
+  assert.deepEqual(interact(state), ["motu"]);
+  assert.equal(state.used.size, 1);
+  updateLounge(state, 60, noKeys);
+  assert.deepEqual({ x: npc.x, y: npc.y }, position);
+  assert.equal(npc.moving, false);
+});
+
+test("WASD cancels a pending visit to Motu before her audio plays", () => {
+  const state = createLoungeWorld();
+  const motu = interactiveTargets(state).find((target) => target.id === "motu");
+  walkToObject(state, motu);
+  assert.equal(state.pending, "motu");
+  assert.ok(state.path.length);
+  const events = updateLounge(state, 1 / 60, new Set(["down"]));
+  assert.equal(state.pending, null);
+  assert.equal(state.path.length, 0);
+  assert.equal(events.includes("motu"), false);
+  assert.equal(state.used.has("motu"), false);
 });

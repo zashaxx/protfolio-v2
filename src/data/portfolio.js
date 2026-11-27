@@ -141,7 +141,7 @@ export const otherProjects = [
     description:
       "My portfolio built with React, Vite, responsive CSS, and light and dark themes.",
     tech: ["React", "Vite", "CSS"],
-    source: "https://github.com/zashaxx",
+    source: "https://github.com/zashaxx/protfolio-v2",
     live: "https://aayush-koirala.com.np",
   },
 ];

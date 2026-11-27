@@ -1,5 +1,5 @@
-// All lounge audio is generated locally. The AudioContext is only created from
-// unlock(), which the game calls in response to a keyboard or pointer gesture.
+// The AudioContext is only created from unlock(), which the game calls in
+// response to a keyboard or pointer gesture. Motu's clip shares its output.
 export function createLoungeAudio() {
   let context = null;
   let output = null;
@@ -13,6 +13,10 @@ export function createLoungeAudio() {
   let timer = null;
   let nextBeatAt = 0;
   let beat = 0;
+  let motuBuffer = null;
+  let motuLoad = null;
+  let motuLoadAbort = null;
+  let motuRequest = 0;
   const voices = new Set();
   const lastPlayed = new Map();
   const beatLength = 60 / 76;
@@ -99,6 +103,46 @@ export function createLoungeAudio() {
     timer = null;
   }
 
+  function loadMotu() {
+    if (motuBuffer) return Promise.resolve(motuBuffer);
+    if (motuLoad) return motuLoad;
+    if (!context || disposed) return Promise.resolve(null);
+    const audioContext = context;
+    motuLoadAbort = new AbortController();
+    motuLoad = fetch(`${import.meta.env?.BASE_URL ?? "/"}aileyho.mpeg`, { signal: motuLoadAbort.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Could not load Motu's audio");
+        return response.arrayBuffer();
+      })
+      .then((data) => audioContext.decodeAudioData(data))
+      .then((buffer) => {
+        if (!disposed) motuBuffer = buffer;
+        return buffer;
+      })
+      .catch(() => null)
+      .finally(() => { motuLoad = null; motuLoadAbort = null; });
+    return motuLoad;
+  }
+
+  function playMotu() {
+    if (disposed || !enabled || paused || !context) return;
+    const request = ++motuRequest;
+    stopVoices("motu", true);
+    // Waiting on decoding also handles F on the very first user gesture.
+    void Promise.all([resume(), loadMotu()]).then(([resumed, buffer]) => {
+      if (!resumed || !buffer || request !== motuRequest || !active()) return;
+      const source = context.createBufferSource();
+      const envelope = context.createGain();
+      source.buffer = buffer;
+      envelope.gain.value = 1;
+      source.connect(envelope).connect(output);
+      register(source, envelope, [source, envelope], "motu");
+      source.start();
+    }).catch(() => {
+      // Loading or audio interruptions must never interrupt gameplay.
+    });
+  }
+
   function scheduleMusic() {
     clearMusicTimer();
     if (!active() || !music) return;
@@ -135,6 +179,7 @@ export function createLoungeAudio() {
 
   function syncState() {
     clearMusicTimer();
+    if (!enabled || paused) motuRequest += 1;
     if (!context || disposed) return;
     const audible = enabled && !paused;
     const now = context.currentTime;
@@ -191,10 +236,12 @@ export function createLoungeAudio() {
         return Promise.resolve(false);
       }
     }
+    if (enabled && !paused) void loadMotu();
     return resume();
   }
 
   function play(kind) {
+    if (kind === "motu") { playMotu(); return; }
     if (!active()) return;
     const now = context.currentTime;
     const cooldown = kind === "step" ? 0.12 : kind === "collision" ? 0.3 : 0.07;
@@ -288,6 +335,9 @@ export function createLoungeAudio() {
     dispose() {
       if (disposed) return;
       disposed = true;
+      motuRequest += 1;
+      motuLoadAbort?.abort();
+      motuBuffer = null;
       clearMusicTimer();
       stopVoices(undefined, true);
       for (const voice of voices) {

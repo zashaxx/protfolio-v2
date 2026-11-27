@@ -7,4 +7,5 @@ them locally rather than requesting them from the reference site at runtime.
 
 Additional interactive furniture is drawn in `loungeRenderer.js` using the
 same grayscale pixel style. Music and effects are synthesized locally by
-`loungeAudio.js`; no audio streams or chat services are used.
+`loungeAudio.js`; Motu plays the local `/aileyho.mpeg` clip through the same audio
+controls. No audio streams or chat services are used.

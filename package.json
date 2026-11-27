@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test:game": "node --test tests/loungeWorld.test.js",
+    "test:game": "node --test tests/loungeWorld.test.js tests/loungeAudio.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

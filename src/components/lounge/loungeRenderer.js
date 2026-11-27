@@ -339,7 +339,7 @@ function actor(ctx, a, state, assets, palette, quiet, npc = false) {
   // transparent ten rows are excluded when placing the actor's feet.
   const py = Math.round(a.y - 48 - (a.seated ? 5 : 0));
   ctx.save();
-  ctx.globalAlpha = npc ? 0.53 : 1;
+  ctx.globalAlpha = npc && !a.interactive ? 0.53 : 1;
   if (dir === "left") {
     ctx.translate(px + size, py);
     ctx.scale(-1, 1);
@@ -367,6 +367,20 @@ function actor(ctx, a, state, assets, palette, quiet, npc = false) {
     rect(ctx, 24, 39, 5, 5, "#555");
     rect(ctx, 36, 39, 5, 5, "#555");
   }
+  if (a.id === "motu") {
+    // A small pixel bow sits above her face and stays vivid in either theme.
+    const bob = quiet ? 0 : frame;
+    const bowY = 14 + bob;
+    rect(ctx, 18, bowY, 6, 10, "#ad3d78");
+    rect(ctx, 24, bowY + 2, 3, 6, "#ad3d78");
+    rect(ctx, 30, bowY, 6, 10, "#ad3d78");
+    rect(ctx, 27, bowY + 2, 3, 6, "#ad3d78");
+    rect(ctx, 20, bowY + 2, 4, 6, "#f58cbd");
+    rect(ctx, 30, bowY + 2, 4, 6, "#f58cbd");
+    rect(ctx, 25, bowY + 3, 4, 4, "#e35d9f");
+    rect(ctx, 27, bowY + 4, 1, 2, "#ffd2e7");
+    rect(ctx, 25, 36 + bob, 14, 3, "#c56a96");
+  }
   ctx.restore();
   if (!npc && a.held) {
     const handX = a.x + (dir === "left" ? -12 : 12);
@@ -378,7 +392,7 @@ function actor(ctx, a, state, assets, palette, quiet, npc = false) {
     ctx.save();
     ctx.shadowColor = palette.back;
     ctx.shadowBlur = 3;
-    text(ctx, label, a.x, a.y - 44 - (a.seated ? 5 : 0), npc ? palette.muted : palette.ink, 9);
+    text(ctx, label, a.x, a.y - 44 - (a.seated ? 5 : 0), npc && !a.interactive ? palette.muted : palette.ink, 9);
     ctx.restore();
   }
 }

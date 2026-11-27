@@ -34,6 +34,8 @@ export function createLoungeWorld() {
     npcs: [
       { x: 216, y: 216, dir: "down", moving: false, walkTime: 0, name: "little bot", wait: 3, target: 0 },
       { x: 720, y: 558, dir: "left", moving: false, walkTime: 0, name: "quiet bot", wait: 5, target: 0 },
+      { id: "motu", type: "motu", x: 432, y: 270, dir: "down", moving: false, walkTime: 0,
+        name: "Motu", verb: "talk to Motu", interactive: true, stationary: true },
     ],
     time: 0, music: false, lamp: false, nearest: null,
     used: new Set(), animations: {}, effects: [], path: [], pending: null,
@@ -54,11 +56,21 @@ export function distanceToObject(player, object) {
     player.y - clamp(player.y, object.y, object.y + object.h));
 }
 
+// Actors use a feet anchor; interaction targets use the same visible bounds as
+// furniture so keyboard proximity and pointer navigation share one target.
+export function interactiveTargets(state) {
+  return [
+    ...state.objects.filter((object) => object.interactive),
+    ...state.npcs.filter((npc) => npc.interactive).map((npc) => ({
+      ...npc, label: npc.name, x: npc.x - 14, y: npc.y - 38, w: 28, h: 38,
+    })),
+  ];
+}
+
 export function nearestObject(state) {
   if (state.player.seated) return state.objects.find((o) => o.id === state.player.seated);
   let closest = null, distance = 52;
-  for (const object of state.objects) {
-    if (!object.interactive) continue;
+  for (const object of interactiveTargets(state)) {
     const d = distanceToObject(state.player, object);
     if (d < distance) { closest = object; distance = d; }
   }
@@ -103,6 +115,11 @@ export function interact(state, object = nearestObject(state)) {
   state.player.moving = false;
   state.busyUntil = state.time + 0.4;
   switch (object.type) {
+    case "motu":
+      state.message = "Motu ♫";
+      effect(state, object, "♪", "note");
+      events.push("motu");
+      break;
     case "music":
       state.music = !state.music;
       state.message = state.music ? "now spinning: a little time off · lo-fi, on repeat." : "record paused. enjoy the quiet.";
@@ -253,7 +270,7 @@ export function updateLounge(state, dt, keys) {
   p.walkTime += dt;
   if (p.moving && state.time - state.stepAt > 0.22) { events.push("step"); state.stepAt = state.time; }
   if (!state.path.length && state.pending && state.time >= state.busyUntil) {
-    const target = state.objects.find((o) => o.id === state.pending);
+    const target = interactiveTargets(state).find((o) => o.id === state.pending);
     events.push(...interact(state, target));
   }
   if (p.held && state.time > p.heldUntil) p.held = null;
@@ -263,7 +280,9 @@ export function updateLounge(state, dt, keys) {
   }
   // Local ambient characters. These are explicitly bots, not online visitors.
   state.npcs.forEach((npc, index) => {
-    npc.walkTime += dt; npc.wait -= dt; npc.moving = false;
+    npc.walkTime += dt; npc.moving = false;
+    if (npc.stationary) return;
+    npc.wait -= dt;
     if (npc.wait > 0) return;
     const routes = index === 0 ? [[216, 216], [216, 288], [108, 288], [108, 216]]
       : [[720, 558], [756, 558], [756, 630], [684, 630]];
@@ -283,7 +302,7 @@ export function loungeSnapshot(state) {
   return {
     message: state.message, nearest: state.nearest?.id ?? null,
     label: state.nearest?.label ?? "", action: interactionText(state),
-    discovered: state.used.size, total: state.objects.filter((o) => o.interactive).length,
+    discovered: state.used.size, total: interactiveTargets(state).length,
     music: state.music, seated: Boolean(state.player.seated),
     walking: Boolean(state.path.length || state.pending), held: state.player.held,
   };

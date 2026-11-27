@@ -102,13 +102,13 @@ export default function TerminalWidget({ activeMode, onModeChange, soundEnabled,
     onModeChange(normalized);
 
     const responses = {
-      play: "opening the lounge. WASD to move · F or click to interact",
+      play: "WASD to move",
       gravity: "gravity on. drag things around",
       draw: "pen out. draw anywhere",
       tour: "starting the guided tour",
       coffee: "brewing a fresh one",
     };
-    appendOutput(`${responses[normalized]} · esc to exit`);
+    appendOutput(normalized === "play" ? responses.play : `${responses[normalized]} · esc to exit`);
     if (normalized === "tour") minimizeTerminal();
   };
 
