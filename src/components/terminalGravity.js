@@ -14,8 +14,7 @@ export default function startGravity(onViewportChange) {
   const root = document.documentElement;
   const main = document.querySelector("#main-content");
   const terminal = document.querySelector(".terminal-window");
-  const launcher = document.querySelector(".terminal-widget");
-  if (!main || !terminal || !launcher) return () => {};
+  if (!main || !terminal) return () => {};
 
   const width = window.innerWidth, height = window.innerHeight;
   const ratio = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(MAX_CANVAS_PIXELS / (width * height)));
@@ -142,14 +141,6 @@ export default function startGravity(onViewportChange) {
     Bodies.rectangle(width / 2, -500, width * 2, 300, staticOptions),
     windowBody,
   ];
-  const launcherBounds = launcher.querySelector("button").getBoundingClientRect();
-  walls.push(Bodies.rectangle(launcherBounds.left + launcherBounds.width / 2,
-    launcherBounds.top + launcherBounds.height / 2, launcherBounds.width, launcherBounds.height, staticOptions));
-  // Leave the launcher visible and clickable through the drag surface.
-  const launcherCutout = `path(evenodd, "M0 0H${width}V${height}H0Z M${launcherBounds.left} ${launcherBounds.top}V${launcherBounds.bottom}H${launcherBounds.right}V${launcherBounds.top}Z")`;
-  // Mask only the empty hit target. Masking full-screen canvas pixels forces
-  // expensive offscreen rasterization on browsers without GPU acceleration.
-  input.style.clipPath = launcherCutout;
   document.body.append(canvas, input);
   const mouse = Mouse.create(input);
   const constraint = MouseConstraint.create(engine, { mouse, collisionFilter: { mask: 1 },
@@ -258,7 +249,7 @@ export default function startGravity(onViewportChange) {
   const simulate = (now) => {
     frame = 0;
     if (finished || stopped || document.hidden) return;
-    if (!terminal.isConnected || !launcher.isConnected) { finish(); return; }
+    if (!terminal.isConnected) { finish(); return; }
     // All layout reads happen before transform writes for this frame.
     if (windowDirty) updateTerminalBounds();
     if (themeDirty) refreshBitmaps();
@@ -372,14 +363,14 @@ export default function startGravity(onViewportChange) {
   return () => {
     if (finished || stopped) return;
     stopped = true; stopSimulation();
-    const shouldAnimate = terminal.isConnected && launcher.isConnected && !document.hidden && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const shouldAnimate = terminal.isConnected && !document.hidden && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!shouldAnimate) { finish(); return; }
     input.remove();
     const states = items.map((item, index) => ({ item, x: item.displayX, y: item.displayY,
       angle: Math.atan2(Math.sin(item.displayAngle), Math.cos(item.displayAngle)), delay: index / Math.max(1, items.length) * 260 }));
     const start = performance.now();
     const restore = (now) => {
-      if (!terminal.isConnected || !launcher.isConnected || document.hidden) { finish(); return; }
+      if (!terminal.isConnected || document.hidden) { finish(); return; }
       if (themeDirty) refreshBitmaps();
       settledLayer.remove();
       clear(); let complete = true;

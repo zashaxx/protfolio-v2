@@ -48,7 +48,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .hero-avatar:hover .hero-avatar__portrait {
-    transform: translateY(-2px) rotate(-3deg);
+    transform: translateY(-2px);
   }
 }
 

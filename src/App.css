@@ -809,13 +809,15 @@ main {
 }
 
 .profile-facts div {
-  padding: 1rem 0;
+  min-width: 0;
+  padding: 1rem;
   border-bottom: 1px solid var(--gray-200);
-  transition: background-color 200ms ease;
+  border-radius: 12px;
+  transition: background-color 150ms ease;
 }
 
 .profile-facts div:hover {
-  background: var(--gray-50);
+  background: var(--hover-surface);
 }
 
 .profile-facts div:last-child {
@@ -1879,8 +1881,7 @@ main {
     border-bottom: 0;
   }
 
-  .hero-meta div:first-child,
-  .profile-facts div:first-child {
+  .hero-meta div:first-child {
     padding-left: 0;
   }
 

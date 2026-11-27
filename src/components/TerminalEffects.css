@@ -253,11 +253,6 @@ html[data-gravity-scene="true"] .sidebar-nav > a:not([data-terminal-gravity-bloc
   visibility: hidden;
 }
 
-html[data-gravity-scene="true"] .terminal-widget {
-  position: relative;
-  z-index: 300;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .terminal-guide,
   .terminal-guide__tag,

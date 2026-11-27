@@ -1,9 +1,13 @@
 const BLOCK_SELECTOR = [
+  ".hero-avatar",
+  ".hero-socials > a", ".site-footer > a", ".detail-page__back", ".preview-heading > a",
   ".expertise-item", ".profile-facts > div", ".contact-card", ".project-gallery",
+  ".featured-project-card", ".project-row__links > a",
   ".stack-preview__tools > *", ".contribution-strip > a",
-  ".desktop-sidebar .brand", ".sidebar-toggle", ".sidebar-nav > a",
+  ".desktop-sidebar .brand", ".sidebar-toggle", ".sidebar-nav > a", ".sidebar-nav__terminal",
   ".sidebar-socials > a", ".sidebar-controls > button",
-  ".sidebar-theme-picker .theme-picker > button", ".sidebar-bottom__email-row > *",
+  ".sidebar-theme-picker .theme-picker", ".sidebar-bottom__email-row > *",
+  "svg", "img",
 ].join(", ");
 const TEXT_MEASUREMENT_BUDGET = 900;
 const DIVIDER_SELECTOR = [
@@ -24,6 +28,7 @@ function intersectsViewport(rect, width, height) {
 export function measureScene(roots, width, height) {
   const blocks = [];
   for (const element of roots.flatMap((root) => [...root.querySelectorAll(BLOCK_SELECTOR)])) {
+    if (element.closest(".terminal-window")) continue;
     if (blocks.some((block) => block.element.contains(element))) continue;
     const rect = element.getBoundingClientRect();
     if (!intersectsViewport(rect, width, height)) continue;
@@ -39,6 +44,7 @@ export function measureScene(roots, width, height) {
 
   const dividers = [];
   for (const source of roots.flatMap((root) => [...root.querySelectorAll(DIVIDER_SELECTOR)])) {
+    if (source.closest(".terminal-window")) continue;
     if (dividers.length >= MAX_DIVIDERS) break;
     const bounds = source.getBoundingClientRect();
     if (bounds.width <= 0 || bounds.right <= 0 || bounds.left >= width) continue;
@@ -71,7 +77,7 @@ export function measureScene(roots, width, height) {
       const source = node.parentElement;
       if (!source || !node.data.trim()) continue;
       if (!sources.has(source)) {
-        const excluded = source.closest(".terminal-widget, script, style, svg, [hidden], [aria-hidden='true']")
+        const excluded = source.closest(".terminal-window, script, style, svg, [hidden]")
           || blocks.some((block) => block.element.contains(source));
         const rect = excluded ? null : source.getBoundingClientRect();
         const style = rect && intersectsViewport(rect, width, height) ? getComputedStyle(source) : null;
