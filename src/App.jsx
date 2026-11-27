@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import BuildStack, { StackDetailPage } from "./components/BuildStack";
 import GitHubContributions from "./components/GitHubContributions";
 import PointerEffects from "./components/PointerEffects";
+import PageEntrance from "./components/PageEntrance";
 import SiteFooter from "./components/SiteFooter";
 import DesktopSidebar from "./components/navigation/DesktopSidebar";
 import MobileNavigation from "./components/navigation/MobileNavigation";
@@ -18,7 +19,16 @@ import "./App.css";
 
 function App() {
   const theme = useTheme();
-  const { pageView, isInitialLoad, currentNavSection, handleNavClick, openDetailPage } = usePageNavigation();
+  const { pageView, currentNavSection, handleNavClick, openDetailPage } = usePageNavigation();
+  const [entrance, setEntrance] = useState({ view: null, hasEntered: false });
+  const isEntering = entrance.view !== pageView;
+  const mainRef = useRef(null);
+  const handleEntranceStart = useCallback(() => {
+    setEntrance((current) => current.view === null ? current : { ...current, view: null });
+  }, []);
+  const handleEntranceReveal = useCallback(() => {
+    setEntrance({ view: pageView, hasEntered: true });
+  }, [pageView]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => window.localStorage.getItem("sidebar-collapsed") === "true",
   );
@@ -40,15 +50,16 @@ function App() {
   }, [soundEnabled]);
 
   useLayoutEffect(() => {
+    if (isEntering) return undefined;
     return observeScrollReveals(
       document.querySelector("#main-content"),
       revealedItemsRef.current,
       pageView,
     );
-  }, [pageView, showAllProjects]);
+  }, [pageView, showAllProjects, isEntering]);
 
   return (
-    <div className={`portfolio-page${isInitialLoad ? " is-initial-load" : ""}${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}>
+    <div className={`portfolio-page${isEntering ? " is-loading" : ""}${!entrance.hasEntered ? " is-first-entrance" : ""}${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`} inert={isEntering}>
       <PointerEffects soundEnabled={soundEnabled} />
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="page-texture" aria-hidden="true">
@@ -75,7 +86,7 @@ function App() {
         onSoundToggle={toggleSound}
         theme={theme}
       />
-      <main id="main-content">
+      <main id="main-content" ref={mainRef} aria-busy={isEntering}>
         {pageView === "projects" ? (
           <ProjectsDetailPage onBack={(event) => handleNavClick(event, "#projects")} />
         ) : pageView === "stack" ? (
@@ -97,6 +108,13 @@ function App() {
         )}
         <SiteFooter pageView={pageView} onNavigate={handleNavClick} />
       </main>
+      <PageEntrance
+        key={pageView}
+        rootRef={mainRef}
+        onStart={handleEntranceStart}
+        onReveal={handleEntranceReveal}
+        initial={!entrance.hasEntered}
+      />
     </div>
   );
 }

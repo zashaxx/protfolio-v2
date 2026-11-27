@@ -1,9 +1,41 @@
 import { socialLinks } from "../../data/portfolio";
+import "./HeroAvatar.css";
 
 export default function HeroSection() {
   return (
     <section className="hero content-wrap" id="home" data-section>
       <div className="hero-summary">
+        <div
+          className="hero-avatar hero-entrance"
+          data-skel="12"
+          role="img"
+          aria-label="Illustrated portrait of Aayush Koirala"
+        >
+          <div className="hero-avatar__portrait">
+            <img
+              className="hero-avatar__image hero-avatar__image--light"
+              src="/dark-shirt-white-background.png"
+              alt=""
+              aria-hidden="true"
+              width="256"
+              height="256"
+              loading="eager"
+              fetchPriority="high"
+              draggable="false"
+            />
+            <img
+              className="hero-avatar__image hero-avatar__image--dark"
+              src="/dark-background.png"
+              alt=""
+              aria-hidden="true"
+              width="256"
+              height="256"
+              loading="eager"
+              fetchPriority="high"
+              draggable="false"
+            />
+          </div>
+        </div>
         <h1 className="hero-entrance">Aayush Koirala</h1>
         <p className="hero-entrance">
           I&apos;m a full-stack engineer currently focused on backend systems

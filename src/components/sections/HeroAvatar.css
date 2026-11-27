@@ -1,0 +1,64 @@
+.hero-avatar {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1.75rem;
+}
+
+.hero-avatar.hero-entrance {
+  animation-delay: 100ms;
+}
+
+.hero-avatar__portrait {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff4e9;
+  transition:
+    background-color 400ms ease,
+    transform 350ms var(--ease-out);
+}
+
+.hero-avatar__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 400ms ease;
+  user-select: none;
+}
+
+.hero-avatar__image--dark {
+  opacity: 0;
+}
+
+:root[data-theme="dark"] .hero-avatar__portrait {
+  background: #111113;
+}
+
+:root[data-theme="dark"] .hero-avatar__image--light {
+  opacity: 0;
+}
+
+:root[data-theme="dark"] .hero-avatar__image--dark {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-avatar:hover .hero-avatar__portrait {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-avatar__portrait,
+  .hero-avatar__image {
+    transition: none;
+  }
+
+  .hero-avatar:hover .hero-avatar__portrait {
+    transform: none;
+  }
+}

@@ -1,0 +1,30 @@
+.page-skeleton {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.is-loading #main-content,
+.is-loading.is-first-entrance :is(.desktop-sidebar, .mobile-header) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Measure the resting layout, before either entrance or scroll transforms. */
+.is-loading [data-reveal] {
+  transform: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-skeleton {
+    display: none;
+  }
+
+  .is-loading #main-content,
+  .is-loading.is-first-entrance :is(.desktop-sidebar, .mobile-header) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

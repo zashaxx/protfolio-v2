@@ -578,13 +578,14 @@ main {
 
 .hero-meta {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
   border-bottom: 1px solid var(--gray-200);
 }
 
 .hero-meta div {
   display: flex;
+  min-width: 0;
   flex-direction: column-reverse;
   padding: 1rem 0.45rem;
   border-right: 1px solid var(--gray-200);
@@ -612,6 +613,7 @@ main {
 
 .hero-meta dd {
   margin-bottom: 0.2rem;
+  overflow-wrap: anywhere;
   font-family: var(--font-pixel);
   font-size: 1.15rem;
 }
