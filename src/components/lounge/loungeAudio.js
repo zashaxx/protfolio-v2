@@ -109,7 +109,7 @@ export function createLoungeAudio() {
     if (!context || disposed) return Promise.resolve(null);
     const audioContext = context;
     motuLoadAbort = new AbortController();
-    motuLoad = fetch(`${import.meta.env?.BASE_URL ?? "/"}aileyho.mpeg`, { signal: motuLoadAbort.signal })
+    motuLoad = fetch(`${import.meta.env?.BASE_URL ?? "/"}aaileyho.mp3`, { signal: motuLoadAbort.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Could not load Motu's audio");
         return response.arrayBuffer();
@@ -128,7 +128,7 @@ export function createLoungeAudio() {
     if (disposed || !enabled || paused || !context) return;
     const request = ++motuRequest;
     stopVoices("motu", true);
-    // Waiting on decoding also handles F on the very first user gesture.
+    // Wait for decoding when interaction is the very first user gesture.
     void Promise.all([resume(), loadMotu()]).then(([resumed, buffer]) => {
       if (!resumed || !buffer || request !== motuRequest || !active()) return;
       const source = context.createBufferSource();

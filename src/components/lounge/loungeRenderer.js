@@ -399,23 +399,13 @@ function actor(ctx, a, state, assets, palette, quiet, npc = false) {
 
 function drawNearest(ctx, state, palette) {
   const o = state.nearest;
-  if (!o) return;
+  if (!o || o.type === "motu") return;
   ctx.save();
   ctx.strokeStyle = palette.outline;
   ctx.lineWidth = 1;
   ctx.setLineDash([3, 4]);
   ctx.strokeRect(Math.round(o.x - 6) + 0.5, Math.round(o.y - 9) + 0.5, o.w + 12, o.h + 16);
   ctx.setLineDash([]);
-  const label = state.player.seated === o.id ? "stand up" : o.label || "interact";
-  ctx.font = '500 9px "Geist Mono", "SFMono-Regular", Consolas, monospace';
-  const labelWidth = ctx.measureText(label).width;
-  const width = labelWidth + 32;
-  const x = o.x + o.w / 2 - width / 2;
-  const y = o.y + o.h + 12;
-  panel(ctx, x, y, width, 20, palette.back, palette.outline, 2);
-  panel(ctx, x + 4, y + 4, 13, 12, palette.key, palette.outline, 1);
-  text(ctx, "F", x + 10, y + 10, palette.ink, 8);
-  text(ctx, label, x + 23, y + 10, palette.ink, 9, "left");
   ctx.restore();
 }
 

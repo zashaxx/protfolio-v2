@@ -35,7 +35,7 @@ export function createLoungeWorld() {
       { x: 216, y: 216, dir: "down", moving: false, walkTime: 0, name: "little bot", wait: 3, target: 0 },
       { x: 720, y: 558, dir: "left", moving: false, walkTime: 0, name: "quiet bot", wait: 5, target: 0 },
       { id: "motu", type: "motu", x: 432, y: 270, dir: "down", moving: false, walkTime: 0,
-        name: "Motu", verb: "talk to Motu", interactive: true, stationary: true },
+        name: "Motu", verb: "talk to Motu", interactive: true, wait: 1.2, target: 0 },
     ],
     time: 0, music: false, lamp: false, nearest: null,
     used: new Set(), animations: {}, effects: [], path: [], pending: null,
@@ -105,6 +105,8 @@ export function interact(state, object = nearestObject(state)) {
     standUp(state);
     return ["stand"];
   }
+  // A caller may still hold the bounds from before a roaming character moved.
+  object = interactiveTargets(state).find((target) => target.id === object?.id) ?? object;
   if (!object || !object.interactive || distanceToObject(state.player, object) > 54) {
     state.message = "a little closer… WASD to walk, or click an object to walk over.";
     return events;
@@ -116,6 +118,7 @@ export function interact(state, object = nearestObject(state)) {
   state.busyUntil = state.time + 0.4;
   switch (object.type) {
     case "motu":
+      state.npcs.find((npc) => npc.id === object.id).wait = 2.4;
       state.message = "Motu ♫";
       effect(state, object, "♪", "note");
       events.push("motu");
@@ -149,7 +152,7 @@ export function interact(state, object = nearestObject(state)) {
       state.player.y = object.y + object.h - 9;
       state.player.dir = "down";
       state.player.seated = object.id;
-      state.message = "ahh, that's better. F / click to stand, or just start walking.";
+      state.message = "ahh, that's better. click to stand, or just start walking.";
       effect(state, object, "a well-earned break", "rest");
       events.push("sit");
       break;
@@ -227,6 +230,7 @@ export function pathTo(state, destination, object = null) {
 
 export function walkToObject(state, object) {
   standUp(state);
+  object = interactiveTargets(state).find((target) => target.id === object.id) ?? object;
   state.path = pathTo(state, null, object);
   state.pending = object.id;
   state.message = `walking to the ${object.label}…`;
@@ -281,16 +285,23 @@ export function updateLounge(state, dt, keys) {
   // Local ambient characters. These are explicitly bots, not online visitors.
   state.npcs.forEach((npc, index) => {
     npc.walkTime += dt; npc.moving = false;
-    if (npc.stationary) return;
+    // Wait for an approaching visitor, releasing immediately if they cancel.
+    if (state.pending === npc.id) return;
     npc.wait -= dt;
     if (npc.wait > 0) return;
-    const routes = index === 0 ? [[216, 216], [216, 288], [108, 288], [108, 216]]
-      : [[720, 558], [756, 558], [756, 630], [684, 630]];
+    const routes = npc.id === "motu" ? [[504, 270], [504, 306], [396, 306], [396, 216], [504, 216]]
+      : index === 0 ? [[216, 216], [216, 288], [108, 288], [108, 216]]
+        : [[720, 558], [756, 558], [756, 630], [684, 630]];
     const [x, y] = routes[npc.target], vx = x - npc.x, vy = y - npc.y, d = Math.hypot(vx, vy);
-    if (d < 2) { npc.target = (npc.target + 1) % routes.length; npc.wait = 2.5 + index; return; }
+    if (d < 2) { npc.target = (npc.target + 1) % routes.length; npc.wait = npc.id === "motu" ? 1.4 : 2.5 + index; return; }
     npc.dir = Math.abs(vx) > Math.abs(vy) ? (vx > 0 ? "right" : "left") : (vy > 0 ? "down" : "up");
-    const nx = npc.x + vx / d * 37 * dt, ny = npc.y + vy / d * 37 * dt;
-    if (Math.hypot(nx - p.x, ny - p.y) > 28 && canStand(nx, ny, state.objects)) {
+    const step = Math.min(37 * dt, d);
+    const nx = npc.x + vx / d * step, ny = npc.y + vy / d * step;
+    const distance = Math.hypot(npc.x - p.x, npc.y - p.y);
+    const nextDistance = Math.hypot(nx - p.x, ny - p.y);
+    // Visitors can stop within 28px while talking. Allow an adjacent character
+    // to walk away instead of trapping her until the player moves first.
+    if ((nextDistance > 28 || (distance < 28 && nextDistance > distance)) && canStand(nx, ny, state.objects)) {
       npc.x = nx; npc.y = ny; npc.moving = true;
     }
   });

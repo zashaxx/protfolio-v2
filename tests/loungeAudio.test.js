@@ -62,7 +62,7 @@ test("Motu plays on the first interaction after audio unlock and reuses the deco
   const first = contexts[0].sources[0];
   assert.equal(first.buffer, contexts[0].decoded);
   assert.equal(first.starts, 1);
-  assert.equal(requests[0].url, "/aileyho.mpeg");
+  assert.equal(requests[0].url, "/aaileyho.mp3");
   audio.play("motu");
   await flush();
   assert.equal(requests.length, 1, "replays use the cached clip");

@@ -196,7 +196,7 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
       <div className="community-lounge__viewport">
         <div className="community-lounge__fade">
           <canvas ref={canvasRef} className="community-lounge__canvas" tabIndex={0} role="application"
-            aria-label="Pixel break room. Use W A S D or arrow keys to move. F to interact nearby. Click furniture or Motu to walk over and interact. Escape exits."
+            aria-label="Pixel break room. Use W A S D or arrow keys to move. Click furniture or Motu to walk over and interact. Escape exits."
             aria-describedby="lounge-status lounge-controls" />
         </div>
         {(ui.loading || ui.error) && <div className="community-lounge__loading" role="status">
@@ -213,10 +213,6 @@ export default function CommunityLounge({ paused = false, soundEnabled = false }
             <Icon size={16} />
           </button>)}
         </div>
-        {!ui.loading && !ui.error && ui.nearest && !ui.walking && <button className="community-lounge__interact" type="button"
-          onClick={() => controlsRef.current?.action()}>
-          <kbd>F</kbd><span>{ui.action}</span>
-        </button>}
       </div>
       <div className="community-lounge__status" id="lounge-status" role="status" aria-live="polite" aria-atomic="true">{ui.message}</div>
       <footer className="community-lounge__controls" id="lounge-controls">
